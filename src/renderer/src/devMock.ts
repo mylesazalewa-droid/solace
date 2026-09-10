@@ -521,6 +521,25 @@ export function installDevMock(): void {
       reference: `${ref.bookName} ${ref.chapter}${ref.verse ? ':' + ref.verse : ''}`,
       verses: [{ n: ref.verse ?? 1, text: 'For God so loved the world… (dev mock verse text).' }]
     }),
+    scripturePassages: async () => [
+      {
+        key: '41.006',
+        book: 41,
+        label: 'Mark 6',
+        count: 2,
+        notes: [
+          { id: 'Journal/rest.md', title: 'Come away and rest', notebookId: 'Journal', ref: 'Mark 6:31' },
+          { id: 'Sermons/feeding.md', title: 'Feeding the five thousand', notebookId: 'Sermons', ref: 'Mark 6:34-44' }
+        ]
+      },
+      {
+        key: '19.023',
+        book: 19,
+        label: 'Psalm 23',
+        count: 1,
+        notes: [{ id: 'Journal/shepherd.md', title: 'The Lord is my shepherd', notebookId: 'Journal', ref: 'Psalm 23' }]
+      }
+    ],
     appVersion: async () => '0.0.0-dev',
     checkForUpdate: async () => ({
       current: '0.0.0-dev',

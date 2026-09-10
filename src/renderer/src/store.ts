@@ -16,6 +16,7 @@ export type Route =
   | { name: 'calendar' }
   | { name: 'agenda' }
   | { name: 'trash' }
+  | { name: 'passages' }
   | { name: 'notebook'; notebookId: string; folderId: string | null }
   | { name: 'note'; noteId: string; backTo: Route }
   | { name: 'search'; scope: string; query: string }

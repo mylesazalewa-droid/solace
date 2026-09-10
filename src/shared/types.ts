@@ -100,6 +100,14 @@ export interface VerseText {
   error?: string
 }
 
+export interface PassageGroup {
+  key: string
+  book: number
+  label: string
+  count: number
+  notes: { id: string; title: string; notebookId: string; ref: string }[]
+}
+
 /** one note, flattened for the sync layer (main ⇄ renderer) */
 export interface SyncNote {
   path: string

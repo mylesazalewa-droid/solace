@@ -17,7 +17,8 @@ import type {
   SyncState,
   VerseRef,
   VerseText,
-  TrashItem
+  TrashItem,
+  PassageGroup
 } from '../shared/types'
 
 const api = {
@@ -158,6 +159,7 @@ const api = {
     ipcRenderer.invoke('scripture:refs', text),
   scriptureLookup: (ref: VerseRef, translation?: 'kjv' | 'bbe'): Promise<VerseText> =>
     ipcRenderer.invoke('scripture:lookup', ref, translation),
+  scripturePassages: (): Promise<PassageGroup[]> => ipcRenderer.invoke('scripture:passages'),
 
   appVersion: (): Promise<string> => ipcRenderer.invoke('app:version'),
   checkForUpdate: (): Promise<{

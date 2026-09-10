@@ -3,7 +3,8 @@ import { join } from 'path'
 import { gunzipSync } from 'zlib'
 import { app } from 'electron'
 import { parseRefs, bookName } from '../shared/scripture'
-import type { VerseRef, VerseText } from '../shared/types'
+import { scanVault, readNoteById } from './vault'
+import type { VerseRef, VerseText, PassageGroup } from '../shared/types'
 
 export { parseRefs, bookName }
 export type Translation = 'kjv' | 'bbe'
@@ -57,4 +58,40 @@ export async function lookup(ref: VerseRef, translation: Translation): Promise<V
       error: e instanceof Error ? e.message : 'Lookup failed'
     }
   }
+}
+
+// ---- passages: which notes cite which chapter ----
+
+export async function collectPassages(vault: string): Promise<PassageGroup[]> {
+  const { notes } = await scanVault(vault)
+  const groups = new Map<string, PassageGroup>()
+  for (const n of notes) {
+    let body = ''
+    try {
+      body = (await readNoteById(vault, n.id)).body
+    } catch {
+      continue
+    }
+    const refs = parseRefs(`${n.title}\n${body}`)
+    const perNote = new Set<string>()
+    for (const r of refs) {
+      const key = `${String(r.book).padStart(2, '0')}.${String(r.chapter).padStart(3, '0')}`
+      if (perNote.has(key)) continue
+      perNote.add(key)
+      let g = groups.get(key)
+      if (!g) {
+        g = {
+          key,
+          book: r.book,
+          label: `${bookName(r.book)} ${r.chapter}`,
+          count: 0,
+          notes: []
+        }
+        groups.set(key, g)
+      }
+      g.count++
+      g.notes.push({ id: n.id, title: n.title, notebookId: n.notebookId, ref: r.text })
+    }
+  }
+  return [...groups.values()].sort((a, b) => a.key.localeCompare(b.key))
 }

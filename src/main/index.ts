@@ -51,7 +51,12 @@ import {
 } from './sync'
 import { signInWithGoogle } from './googleAuth'
 import { checkForUpdate } from './updates'
-import { parseRefs, lookup as lookupVerse, type Translation } from './scripture'
+import {
+  parseRefs,
+  lookup as lookupVerse,
+  collectPassages,
+  type Translation
+} from './scripture'
 import { listTrash, restoreTrash, purgeTrash, emptyTrash } from './trash'
 import { saveAttachment } from './attach'
 import type {
@@ -456,6 +461,7 @@ function register(): void {
 
   // ---- scripture ----
   ipcMain.handle('scripture:refs', (_e, text: string) => parseRefs(text))
+  ipcMain.handle('scripture:passages', async () => collectPassages(await currentVault()))
   ipcMain.handle('scripture:lookup', async (_e, ref: VerseRef, translation?: Translation) => {
     const t = translation ?? (await getConfig()).bibleTranslation ?? 'kjv'
     return lookupVerse(ref, t)

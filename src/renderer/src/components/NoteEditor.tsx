@@ -14,6 +14,8 @@ import { TagEditor } from './TagEditor'
 import { FormatBar } from './FormatBar'
 import { wikiLinkComplete } from '../editor/wikiComplete'
 import { attachScripture } from '../editor/scripturePreview'
+import { cmScripture } from '../editor/cmScripture'
+import { editorKeymap } from '../editor/keybindings'
 import { diffWords, hasRealChange } from '../diff'
 import type { NoteDoc } from '../../../shared/types'
 
@@ -64,16 +66,44 @@ export function NoteEditor(): JSX.Element {
     return attachScripture(previewRef.current, () => bibleTranslation)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, body, bibleTranslation])
+
+  const outline = useMemo(() => {
+    const items: { level: number; text: string; line: number }[] = []
+    body.split('\n').forEach((l, i) => {
+      const m = l.match(/^(#{1,3})\s+(.+)$/)
+      if (m) items.push({ level: m[1].length, text: m[2].trim(), line: i })
+    })
+    return items
+  }, [body])
+
+  const jumpToHeading = (
+    h: { text: string; line: number },
+    idx: number
+  ): void => {
+    if (mode === 'read' && previewRef.current) {
+      const heads = previewRef.current.querySelectorAll('h1, h2, h3')
+      heads[idx]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else if (cmView) {
+      const pos = cmView.state.doc.line(Math.min(h.line + 1, cmView.state.doc.lines)).from
+      cmView.dispatch({ selection: { anchor: pos }, scrollIntoView: true })
+      cmView.focus()
+    }
+  }
   // note titles for `[[` autocomplete, read live from a ref so the extension is stable
   const titlesRef = useRef<string[]>([])
   titlesRef.current = useMemo(
     () => (snapshot?.notes ?? []).map((n) => n.title).filter(Boolean),
     [snapshot]
   )
+  const bibleRef = useRef<'kjv' | 'bbe'>('kjv')
+  bibleRef.current = bibleTranslation
+
   const cmExtensions = useMemo(
     () => [
       markdown({ base: markdownLanguage }),
       EditorView.lineWrapping,
+      editorKeymap,
+      cmScripture(() => bibleRef.current),
       wikiLinkComplete(() => titlesRef.current),
       EditorView.domEventHandlers({
         paste(e, view) {
@@ -497,6 +527,22 @@ export function NoteEditor(): JSX.Element {
           )}
         </Menu>
       </div>
+
+      {outline.length >= 3 && (
+        <nav className="note-outline" aria-label="Outline">
+          <div className="no-label">Outline</div>
+          {outline.map((h, i) => (
+            <button
+              key={i}
+              className={`no-item lvl-${h.level}`}
+              onClick={() => jumpToHeading(h, i)}
+              title={h.text}
+            >
+              {h.text}
+            </button>
+          ))}
+        </nav>
+      )}
 
       <div className="editor-scroll">
         <div className="editor-inner">
