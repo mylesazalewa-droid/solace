@@ -78,6 +78,8 @@ export function Settings({ onClose }: { onClose: () => void }): JSX.Element {
             </div>
           </section>
 
+          <SyncSettings draft={draft} patch={patch} />
+
           <section className="settings-sec">
             <div className="sec-label">The helper</div>
             <p className="sec-note">
@@ -225,8 +227,6 @@ export function Settings({ onClose }: { onClose: () => void }): JSX.Element {
               </div>
             )}
           </section>
-
-          <SyncSettings draft={draft} patch={patch} />
 
           <section className="settings-sec">
             <div className="sec-label">Templates</div>

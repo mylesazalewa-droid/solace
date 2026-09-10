@@ -1986,6 +1986,73 @@ input {
   font-weight: 700;
   margin-bottom: 22px;
 }
+/* ===== format bar ===== */
+.format-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-soft);
+  flex-wrap: wrap;
+}
+.fb-btn {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-size: 14px;
+  display: grid;
+  place-items: center;
+  transition: background 0.12s var(--ease);
+}
+.fb-btn:hover {
+  background: var(--raise);
+  color: var(--ink);
+}
+.fb-mono {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+}
+.fb-hint {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--faint);
+}
+.fb-hint kbd {
+  font-family: ui-monospace, Menlo, monospace;
+  background: var(--raise);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 10px;
+}
+
+/* ===== [[ ]] autocomplete popup ===== */
+.cm-tooltip.cm-tooltip-autocomplete {
+  border: 1px solid var(--line) !important;
+  background: var(--card) !important;
+  border-radius: var(--r-md) !important;
+  box-shadow: var(--shadow) !important;
+  overflow: hidden;
+}
+.cm-tooltip-autocomplete > ul {
+  font-family: 'Nunito', system-ui, sans-serif !important;
+  max-height: 240px;
+}
+.cm-tooltip-autocomplete > ul > li {
+  padding: 7px 12px !important;
+  color: var(--ink-soft);
+}
+.cm-tooltip-autocomplete > ul > li[aria-selected] {
+  background: var(--grass-soft) !important;
+  color: var(--grass-deep) !important;
+}
+
 .cm-theme,
 .cm-theme .cm-editor,
 .cm-theme .cm-scroller,

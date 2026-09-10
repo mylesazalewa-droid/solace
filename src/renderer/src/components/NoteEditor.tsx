@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import CodeMirror from '@uiw/react-codemirror'
+import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { EditorView } from '@codemirror/view'
 import { marked } from 'marked'
@@ -8,10 +8,10 @@ import { askConfirm } from '../prompt'
 import { Menu } from './Menu'
 import { Icon } from './Icon'
 import { TagEditor } from './TagEditor'
+import { FormatBar } from './FormatBar'
+import { wikiLinkComplete } from '../editor/wikiComplete'
 import { diffWords, hasRealChange } from '../diff'
 import type { NoteDoc } from '../../../shared/types'
-
-const cmExtensions = [markdown({ base: markdownLanguage }), EditorView.lineWrapping]
 
 export function NoteEditor(): JSX.Element {
   const route = useStore((s) => s.route)
@@ -47,6 +47,23 @@ export function NoteEditor(): JSX.Element {
     for (const n of snapshot?.notes ?? []) for (const t of n.tags) counts.set(t, (counts.get(t) ?? 0) + 1)
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t)
   }, [snapshot])
+
+  const cmRef = useRef<ReactCodeMirrorRef>(null)
+  const [cmView, setCmView] = useState<EditorView | null>(null)
+  // note titles for `[[` autocomplete, read live from a ref so the extension is stable
+  const titlesRef = useRef<string[]>([])
+  titlesRef.current = useMemo(
+    () => (snapshot?.notes ?? []).map((n) => n.title).filter(Boolean),
+    [snapshot]
+  )
+  const cmExtensions = useMemo(
+    () => [
+      markdown({ base: markdownLanguage }),
+      EditorView.lineWrapping,
+      wikiLinkComplete(() => titlesRef.current)
+    ],
+    []
+  )
 
   const notes = snapshot?.notes ?? []
   const backlinks = useMemo(() => {
@@ -472,17 +489,27 @@ export function NoteEditor(): JSX.Element {
           <TagEditor tags={tags} suggestions={allTags} onChange={updateTags} />
 
           {mode === 'write' ? (
-            <CodeMirror
-              className="cm-theme"
-              value={body}
-              extensions={cmExtensions}
-              basicSetup={{ lineNumbers: false, foldGutter: false, highlightActiveLine: false }}
-              placeholder="Start writing…"
-              onChange={(v) => {
-                setBody(v)
-                scheduleSave()
-              }}
-            />
+            <>
+              <FormatBar view={cmView} />
+              <CodeMirror
+                ref={cmRef}
+                className="cm-theme"
+                value={body}
+                extensions={cmExtensions}
+                basicSetup={{
+                  lineNumbers: false,
+                  foldGutter: false,
+                  highlightActiveLine: false,
+                  autocompletion: false
+                }}
+                placeholder="Start writing…"
+                onCreateEditor={(view) => setCmView(view)}
+                onChange={(v) => {
+                  setBody(v)
+                  scheduleSave()
+                }}
+              />
+            </>
           ) : (
             <div
               className="preview"
