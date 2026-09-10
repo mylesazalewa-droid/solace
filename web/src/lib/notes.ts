@@ -3,7 +3,11 @@ import {
   doc,
   onSnapshot,
   setDoc,
+  updateDoc,
   getDoc,
+  deleteField,
+  FieldPath,
+  writeBatch,
   serverTimestamp
 } from 'firebase/firestore'
 import { db } from './firebase'
@@ -203,6 +207,39 @@ export async function trashNote(uid: string, note: Note): Promise<void> {
     { deleted: true, deletedAt: serverTimestamp(), rev: note.rev + 1, device: DEVICE, syncedAt: serverTimestamp() },
     { merge: true }
   )
+}
+
+/**
+ * Delete a whole notebook from the web: tombstones every note under it and
+ * removes it from the shared meta map, so it disappears on every device.
+ */
+export async function deleteNotebook(uid: string, notebook: string, allNotes: Note[]): Promise<number> {
+  const victims = allNotes.filter((n) => n.notebook === notebook && n.path.split('/')[0] === notebook)
+  for (let i = 0; i < victims.length; i += 400) {
+    const batch = writeBatch(db)
+    for (const n of victims.slice(i, i + 400)) {
+      batch.set(
+        doc(db, 'users', uid, 'notes', n.id),
+        {
+          deleted: true,
+          deletedAt: serverTimestamp(),
+          rev: n.rev + 1,
+          device: DEVICE,
+          syncedAt: serverTimestamp()
+        },
+        { merge: true }
+      )
+    }
+    await batch.commit()
+  }
+  try {
+    const ref = doc(db, 'users', uid, 'meta', 'vault')
+    await updateDoc(ref, new FieldPath('notebooks', notebook), deleteField())
+    await updateDoc(ref, 'metaUpdated', new Date().toISOString(), 'device', DEVICE)
+  } catch {
+    /* meta doc may not exist yet — nothing to prune */
+  }
+  return victims.length
 }
 
 const TASK_RE = /^(\s*)([-*+])\s+\[([ xX])\]\s+(.*)$/

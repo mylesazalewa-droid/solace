@@ -394,6 +394,20 @@ h3 {
 .lib-head .pill + .pill {
   margin-left: 0;
 }
+.nb-head .pill.danger {
+  margin-left: auto;
+}
+.pill.danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--lib-line));
+}
+.pill.danger:hover {
+  border-color: var(--danger);
+}
+.pill:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
 .back {
   border: 0;
   background: none;

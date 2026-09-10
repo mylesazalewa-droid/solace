@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../store'
+import { auth } from '../lib/firebase'
+import { deleteNotebook } from '../lib/notes'
 import { Rail } from './Rail'
 import { Cover, coverFor } from './Cover'
 import { NoteCard } from './NoteCard'
@@ -10,6 +12,27 @@ export function Notebook({ id }: { id: string }): JSX.Element {
   const covers = useStore((s) => s.covers)
   const go = useStore((s) => s.go)
   const [q, setQ] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const count = notes.filter((n) => n.notebook === id).length
+
+  const removeNotebook = async (): Promise<void> => {
+    const uid = auth.currentUser?.uid
+    if (!uid || busy) return
+    const ok = window.confirm(
+      `Delete “${id}” and its ${count} note${count === 1 ? '' : 's'}?\n\n` +
+        `They move to the trash and are removed from every device. This can’t be undone here.`
+    )
+    if (!ok) return
+    setBusy(true)
+    try {
+      await deleteNotebook(uid, id, notes)
+      go({ name: 'home' })
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Could not delete the notebook.')
+      setBusy(false)
+    }
+  }
 
   const cover = coverFor(id, covers[id])
   const mine = useMemo(() => {
@@ -37,11 +60,13 @@ export function Notebook({ id }: { id: string }): JSX.Element {
           <div>
             <h1>{id}</h1>
             <span className="lib-meta">
-              {notes.filter((n) => n.notebook === id).length} note
-              {notes.filter((n) => n.notebook === id).length === 1 ? '' : 's'}
+              {count} note{count === 1 ? '' : 's'}
             </span>
           </div>
           <SyncBadge compact />
+          <button className="pill danger" onClick={removeNotebook} disabled={busy}>
+            {busy ? 'Deleting…' : 'Delete'}
+          </button>
           <button className="pill" onClick={() => go({ name: 'new', notebook: id })}>
             ＋ New note
           </button>
