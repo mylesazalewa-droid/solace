@@ -3935,7 +3935,16 @@ input {
   color: var(--faint);
   font-style: italic;
 }
+.verse-pop.pinned {
+  box-shadow: var(--shadow-lift);
+  border-color: color-mix(in srgb, var(--gold) 40%, var(--line));
+  max-height: 420px;
+}
 .vp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   font-family: 'Baloo 2', sans-serif;
   font-weight: 700;
   font-size: 12px;
@@ -3943,6 +3952,25 @@ input {
   color: var(--gold);
   text-transform: uppercase;
   margin-bottom: 7px;
+}
+.verse-pop.pinned .vp-head {
+  margin: -12px -14px 8px;
+  padding: 9px 10px 9px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--raise);
+}
+.vp-close {
+  border: 0;
+  background: none;
+  color: var(--faint);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 5px;
+  border-radius: 5px;
+}
+.vp-close:hover {
+  background: var(--sunk);
+  color: var(--ink);
 }
 .vp-v {
   margin: 0 0 5px;

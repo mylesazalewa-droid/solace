@@ -3,6 +3,9 @@ import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { EditorView } from '@codemirror/view'
 import { marked } from 'marked'
+
+// a single Enter in the editor becomes a real line break in the preview
+marked.use({ breaks: true, gfm: true })
 import { useStore } from '../store'
 import { askConfirm } from '../prompt'
 import { Menu } from './Menu'

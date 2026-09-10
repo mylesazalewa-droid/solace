@@ -1,6 +1,8 @@
 import { BrowserWindow, dialog } from 'electron'
 import { promises as fs } from 'fs'
 import { marked } from 'marked'
+
+marked.use({ breaks: true, gfm: true })
 import htmlToDocx from 'html-to-docx'
 import type { ExportFormat } from '../shared/types'
 import { readNoteById } from './vault'

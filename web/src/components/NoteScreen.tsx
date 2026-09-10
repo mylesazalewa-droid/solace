@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { marked } from 'marked'
+
+marked.use({ breaks: true, gfm: true })
 import { useStore } from '../store'
 import { saveNote, trashNote, toggleTask, type Note } from '../lib/notes'
 
