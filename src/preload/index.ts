@@ -14,7 +14,9 @@ import type {
   TaskItem,
   SyncSnapshot,
   SyncApply,
-  SyncState
+  SyncState,
+  VerseRef,
+  VerseText
 } from '../shared/types'
 
 const api = {
@@ -139,6 +141,11 @@ const api = {
   syncDevice: (): Promise<string> => ipcRenderer.invoke('sync:device'),
   googleSignIn: (): Promise<{ idToken: string; accessToken: string }> =>
     ipcRenderer.invoke('google:signin'),
+
+  scriptureRefs: (text: string): Promise<VerseRef[]> =>
+    ipcRenderer.invoke('scripture:refs', text),
+  scriptureLookup: (ref: VerseRef, translation?: 'kjv' | 'bbe'): Promise<VerseText> =>
+    ipcRenderer.invoke('scripture:lookup', ref, translation),
 
   appVersion: (): Promise<string> => ipcRenderer.invoke('app:version'),
   checkForUpdate: (): Promise<{

@@ -41,7 +41,14 @@ import {
 } from './sync'
 import { signInWithGoogle } from './googleAuth'
 import { checkForUpdate } from './updates'
-import type { ExportFormat, NoteTemplate, SyncApply, SyncState } from '../shared/types'
+import { parseRefs, lookup as lookupVerse, type Translation } from './scripture'
+import type {
+  ExportFormat,
+  NoteTemplate,
+  SyncApply,
+  SyncState,
+  VerseRef
+} from '../shared/types'
 
 // Resolve bundle paths from the app root — works in dev and inside the asar.
 // (Avoids electron-vite's __dirname ESM shim, which mis-injects when the bundle
@@ -396,6 +403,13 @@ function register(): void {
 
   ipcMain.handle('app:version', () => app.getVersion())
   ipcMain.handle('app:checkUpdate', () => checkForUpdate())
+
+  // ---- scripture ----
+  ipcMain.handle('scripture:refs', (_e, text: string) => parseRefs(text))
+  ipcMain.handle('scripture:lookup', async (_e, ref: VerseRef, translation?: Translation) => {
+    const t = translation ?? (await getConfig()).bibleTranslation ?? 'kjv'
+    return lookupVerse(ref, t)
+  })
 }
 
 // one running copy only — a second launch just focuses the first (and keeps the

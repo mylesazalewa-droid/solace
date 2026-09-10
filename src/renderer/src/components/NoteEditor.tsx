@@ -10,6 +10,7 @@ import { Icon } from './Icon'
 import { TagEditor } from './TagEditor'
 import { FormatBar } from './FormatBar'
 import { wikiLinkComplete } from '../editor/wikiComplete'
+import { attachScripture } from '../editor/scripturePreview'
 import { diffWords, hasRealChange } from '../diff'
 import type { NoteDoc } from '../../../shared/types'
 
@@ -50,6 +51,14 @@ export function NoteEditor(): JSX.Element {
 
   const cmRef = useRef<ReactCodeMirrorRef>(null)
   const [cmView, setCmView] = useState<EditorView | null>(null)
+  const previewRef = useRef<HTMLDivElement>(null)
+  const bibleTranslation = config?.bibleTranslation ?? 'kjv'
+
+  useEffect(() => {
+    if (mode !== 'read' || !previewRef.current) return
+    return attachScripture(previewRef.current, () => bibleTranslation)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, body, bibleTranslation])
   // note titles for `[[` autocomplete, read live from a ref so the extension is stable
   const titlesRef = useRef<string[]>([])
   titlesRef.current = useMemo(
@@ -512,6 +521,7 @@ export function NoteEditor(): JSX.Element {
             </>
           ) : (
             <div
+              ref={previewRef}
               className="preview"
               onClick={onPreviewClick}
               dangerouslySetInnerHTML={{

@@ -149,7 +149,8 @@ let config: AppConfig = {
   quickCapture: true,
   quickCaptureHotkey: 'CommandOrControl+Shift+Space',
   firebaseConfig: '',
-  syncEnabled: true
+  syncEnabled: true,
+  bibleTranslation: 'kjv'
 }
 
 let nbOrder: string[] = []
@@ -501,6 +502,18 @@ export function installDevMock(): void {
     googleSignIn: async () => {
       throw new Error('Google sign-in only works in the packaged app.')
     },
+    scriptureRefs: async (text: string) => {
+      const m = text.match(/\b(John|Mark|Psalm|Genesis|Luke)\s+(\d+)(?::(\d+))?/i)
+      return m
+        ? [{ text: m[0], book: 42, bookName: m[1], chapter: +m[2], verse: m[3] ? +m[3] : null, endVerse: null }]
+        : []
+    },
+    scriptureLookup: async (ref: { reference?: string; bookName: string; chapter: number; verse: number | null }) => ({
+      ref: '',
+      translation: 'kjv' as const,
+      reference: `${ref.bookName} ${ref.chapter}${ref.verse ? ':' + ref.verse : ''}`,
+      verses: [{ n: ref.verse ?? 1, text: 'For God so loved the world… (dev mock verse text).' }]
+    }),
     appVersion: async () => '0.0.0-dev',
     checkForUpdate: async () => ({
       current: '0.0.0-dev',

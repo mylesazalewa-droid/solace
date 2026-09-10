@@ -79,6 +79,25 @@ export interface AppConfig {
   firebaseConfig: string
   /** turn cloud sync on/off */
   syncEnabled: boolean
+  /** which bundled public-domain Bible to show on hover */
+  bibleTranslation: 'kjv' | 'bbe'
+}
+
+export interface VerseRef {
+  text: string
+  book: number
+  bookName: string
+  chapter: number
+  verse: number | null
+  endVerse: number | null
+}
+
+export interface VerseText {
+  ref: string
+  translation: 'kjv' | 'bbe'
+  reference: string
+  verses: { n: number; text: string }[]
+  error?: string
 }
 
 /** one note, flattened for the sync layer (main ⇄ renderer) */

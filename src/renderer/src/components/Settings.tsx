@@ -81,6 +81,32 @@ export function Settings({ onClose }: { onClose: () => void }): JSX.Element {
           <SyncSettings draft={draft} patch={patch} />
 
           <section className="settings-sec">
+            <div className="sec-label">Scripture</div>
+            <div className="setting-row">
+              <span>Show verses in</span>
+              <div className="seg">
+                <button
+                  className={draft.bibleTranslation === 'kjv' ? 'on' : ''}
+                  onClick={() => patch({ bibleTranslation: 'kjv' })}
+                >
+                  KJV
+                </button>
+                <button
+                  className={draft.bibleTranslation === 'bbe' ? 'on' : ''}
+                  onClick={() => patch({ bibleTranslation: 'bbe' })}
+                >
+                  Plain English
+                </button>
+              </div>
+            </div>
+            <p className="sec-note">
+              References like <code>Mark 6:31</code> in a note become links — hover to read the
+              passage. KJV is the traditional wording; Plain English (BBE) is simpler. Both are
+              bundled and work offline.
+            </p>
+          </section>
+
+          <section className="settings-sec">
             <div className="sec-label">The helper</div>
             <p className="sec-note">
               Small AI tasks — tidying notes, writing the one-line summaries, suggesting tags.

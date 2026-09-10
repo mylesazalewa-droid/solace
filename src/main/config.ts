@@ -17,7 +17,8 @@ const DEFAULTS: AppConfig = {
   quickCapture: true,
   quickCaptureHotkey: 'CommandOrControl+Shift+Space',
   firebaseConfig: '',
-  syncEnabled: true
+  syncEnabled: true,
+  bibleTranslation: 'kjv'
 }
 
 let cache: AppConfig | null = null

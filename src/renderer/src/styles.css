@@ -3902,3 +3902,57 @@ input {
 .sync-pill svg {
   flex: none;
 }
+
+/* ===== scripture references ===== */
+.verse-ref {
+  color: var(--grass-deep);
+  border-bottom: 1px dotted color-mix(in srgb, var(--grass-deep) 55%, transparent);
+  cursor: help;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.verse-ref:hover {
+  background: var(--grass-soft);
+  border-radius: 3px;
+}
+.verse-pop {
+  position: absolute;
+  z-index: 200;
+  width: min(360px, calc(100vw - 32px));
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  animation: fade-in 0.12s var(--ease) both;
+}
+.verse-pop.loading {
+  color: var(--faint);
+  font-style: italic;
+}
+.vp-head {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 7px;
+}
+.vp-v {
+  margin: 0 0 5px;
+}
+.vp-v sup {
+  color: var(--faint);
+  font-weight: 700;
+  margin-right: 2px;
+}
+.vp-err {
+  margin: 0;
+  color: var(--faint);
+}
