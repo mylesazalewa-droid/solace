@@ -2,6 +2,11 @@
 
 A calm Mac notes app: a shelf of notebooks that file and find themselves.
 
+> **Installing the app?** Grab the latest `Solace.dmg` from
+> [Releases](https://github.com/mylesazalewa-droid/solace/releases/latest) and
+> follow **[INSTALL.md](INSTALL.md)** — macOS blocks apps that aren't from the
+> App Store, and there's a one-time step to get past it.
+
 - **Storage:** plain Markdown files + YAML frontmatter, in a folder you choose. Obsidian can
   open the same folder. Notebooks = top-level folders; series/folders = one level of subfolders.
 - **Stack:** Electron + React + TypeScript (electron-vite), CodeMirror 6 editor.
