@@ -34,6 +34,7 @@ interface State {
   exportTarget: { noteIds: string[]; name: string } | null
   moveTarget: { noteId: string; title: string } | null
   historyFor: { noteId: string; title: string } | null
+  publishTarget: { noteId: string; title: string; body: string } | null
   sync: SyncStatus
   importJob: ImportJob | null
 
@@ -69,6 +70,7 @@ export const useStore = create<State>((set, get) => ({
   exportTarget: null,
   moveTarget: null,
   historyFor: null,
+  publishTarget: null,
   sync: { state: 'off' },
   importJob: null,
 

@@ -513,6 +513,21 @@ export function NoteEditor(): JSX.Element {
               >
                 Split into a series…
               </button>
+              <button
+                onClick={() => {
+                  close()
+                  if (noteId)
+                    useStore.setState({
+                      publishTarget: {
+                        noteId,
+                        title: title.trim() || 'Untitled note',
+                        body
+                      }
+                    })
+                }}
+              >
+                Publish as a link…
+              </button>
               <div className="menu-sep" />
               <button
                 className="danger"

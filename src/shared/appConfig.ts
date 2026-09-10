@@ -20,7 +20,10 @@ interface SharedFirebase {
 export const SHARED: {
   firebase: SharedFirebase | null
   googleClientId: string
+  /** where published note links resolve (the Vercel-hosted web app) */
+  webAppUrl: string
 } = {
+  webAppUrl: 'https://solace-livid-nu.vercel.app',
   firebase: {
     apiKey: 'AIzaSyDM3wcWiyyPlDDyYtXdOj6BHYr63ShecWQ',
     authDomain: 'solace-cfee3.firebaseapp.com',

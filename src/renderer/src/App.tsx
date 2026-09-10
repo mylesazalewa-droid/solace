@@ -18,6 +18,7 @@ import { Templates } from './components/Templates'
 import { ExportDialog } from './components/ExportDialog'
 import { MovePanel } from './components/MovePanel'
 import { HistoryPanel } from './components/HistoryPanel'
+import { PublishDialog } from './components/PublishDialog'
 import { PromptHost } from './prompt'
 import { startSync } from './sync'
 import type { Route } from './store'
@@ -122,6 +123,7 @@ export default function App(): JSX.Element {
       <ExportDialog />
       <MovePanel />
       <HistoryPanel />
+      <PublishDialog />
       <ImportToast />
       <PromptHost />
     </div>

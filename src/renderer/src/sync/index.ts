@@ -91,6 +91,11 @@ export async function startSync(): Promise<void> {
   }
 }
 
+/** Live Firestore + signed-in user, for features outside the sync loop (e.g. publish). */
+export function syncHandle(): { db: Firestore; uid: string } | null {
+  return db && user ? { db, uid: user.uid } : null
+}
+
 function teardown(): void {
   if (timer) {
     clearInterval(timer)

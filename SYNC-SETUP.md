@@ -38,8 +38,28 @@ DMG where "Continue with Google" just works.
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // a person's own vault
     match /users/{uid}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // release / update-check doc — world readable, never writable from a client
+    match /public/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // published notes — anyone can read the link, only the owner can change it
+    match /pages/{id} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.owner == request.auth.uid;
+      allow update: if request.auth != null
+                    && resource.data.owner == request.auth.uid
+                    && request.resource.data.owner == request.auth.uid;
+      allow delete: if request.auth != null
+                    && resource.data.owner == request.auth.uid;
     }
   }
 }

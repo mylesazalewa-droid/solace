@@ -9,6 +9,9 @@ import { Notebook } from './components/Notebook'
 import { SearchView } from './components/SearchView'
 import { NoteScreen } from './components/NoteScreen'
 import { NewNote } from './components/NewNote'
+import { PublicPage } from './components/PublicPage'
+
+const PUBLIC_MATCH = window.location.pathname.match(/^\/p\/([A-Za-z0-9_-]{6,64})\/?$/)
 
 export function App(): JSX.Element {
   const user = useStore((s) => s.user)
@@ -19,7 +22,10 @@ export function App(): JSX.Element {
   const setOnline = useStore((s) => s.setOnline)
   const setPending = useStore((s) => s.setPending)
 
-  useEffect(() => onAuthStateChanged(auth, (u) => setUser(u)), [setUser])
+  useEffect(() => {
+    if (PUBLIC_MATCH) return
+    return onAuthStateChanged(auth, (u) => setUser(u))
+  }, [setUser])
 
   useEffect(() => {
     const on = (): void => setOnline(true)
@@ -44,6 +50,8 @@ export function App(): JSX.Element {
       b()
     }
   }, [user, setNotes, setCovers, setPending])
+
+  if (PUBLIC_MATCH) return <PublicPage id={PUBLIC_MATCH[1]} />
 
   if (user === undefined) {
     return (
