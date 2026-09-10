@@ -26,6 +26,8 @@ export function NoteScreen({ id }: { id: string }): JSX.Element {
       setBody(note.body)
       latest.current = { title: note.title, body: note.body }
       setState('clean')
+      // a fresh / empty note opens ready to type; one with content opens in Read
+      setTab(note.body.trim() ? 'read' : 'write')
     }
   }, [note])
 
