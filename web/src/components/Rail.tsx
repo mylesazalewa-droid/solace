@@ -1,6 +1,7 @@
 import { signOut } from 'firebase/auth'
 import { auth } from '../lib/firebase'
 import { useStore } from '../store'
+import { SyncBadge } from './SyncBadge'
 
 function Ico({ d }: { d: string }): JSX.Element {
   return (
@@ -39,6 +40,7 @@ export function Rail({ active }: { active: 'library' | 'search' }): JSX.Element 
         </button>
       </nav>
       <div className="rail-foot">
+        <SyncBadge />
         <div className="rail-acct">{email}</div>
         <button className="rail-signout" onClick={() => signOut(auth)}>
           Sign out

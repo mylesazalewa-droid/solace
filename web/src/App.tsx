@@ -16,21 +16,34 @@ export function App(): JSX.Element {
   const setUser = useStore((s) => s.setUser)
   const setNotes = useStore((s) => s.setNotes)
   const setCovers = useStore((s) => s.setCovers)
+  const setOnline = useStore((s) => s.setOnline)
+  const setPending = useStore((s) => s.setPending)
 
   useEffect(() => onAuthStateChanged(auth, (u) => setUser(u)), [setUser])
+
+  useEffect(() => {
+    const on = (): void => setOnline(true)
+    const off = (): void => setOnline(false)
+    window.addEventListener('online', on)
+    window.addEventListener('offline', off)
+    return () => {
+      window.removeEventListener('online', on)
+      window.removeEventListener('offline', off)
+    }
+  }, [setOnline])
 
   useEffect(() => {
     if (!user) {
       setNotes([])
       return
     }
-    const a = watchNotes(user.uid, setNotes)
+    const a = watchNotes(user.uid, setNotes, (m) => setPending(m.pending))
     const b = watchCovers(user.uid, setCovers)
     return () => {
       a()
       b()
     }
-  }, [user, setNotes, setCovers])
+  }, [user, setNotes, setCovers, setPending])
 
   if (user === undefined) {
     return (

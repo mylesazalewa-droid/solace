@@ -95,16 +95,25 @@ function toNote(id: string, d: Record<string, unknown>): Note | null {
   }
 }
 
-export function watchNotes(uid: string, cb: (notes: Note[]) => void): () => void {
-  return onSnapshot(collection(db, 'users', uid, 'notes'), (snap) => {
-    const out: Note[] = []
-    snap.forEach((docSnap) => {
-      const n = toNote(docSnap.id, docSnap.data())
-      if (n) out.push(n)
-    })
-    out.sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updated.localeCompare(a.updated))
-    cb(out)
-  })
+export function watchNotes(
+  uid: string,
+  cb: (notes: Note[]) => void,
+  onMeta?: (m: { pending: boolean; fromCache: boolean }) => void
+): () => void {
+  return onSnapshot(
+    collection(db, 'users', uid, 'notes'),
+    { includeMetadataChanges: true },
+    (snap) => {
+      const out: Note[] = []
+      snap.forEach((docSnap) => {
+        const n = toNote(docSnap.id, docSnap.data())
+        if (n) out.push(n)
+      })
+      out.sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updated.localeCompare(a.updated))
+      cb(out)
+      onMeta?.({ pending: snap.metadata.hasPendingWrites, fromCache: snap.metadata.fromCache })
+    }
+  )
 }
 
 export function watchCovers(uid: string, cb: (covers: Record<string, Cover>) => void): () => void {

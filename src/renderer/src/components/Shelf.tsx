@@ -300,15 +300,8 @@ function ShelfRow({
             className={`shelf-slot ${drag === it.key ? 'dragging' : ''} ${over === it.key ? 'drop-here' : ''}`}
             {...dragProps(it)}
           >
-            {it.book}
-          </div>
-        ))}
-      </div>
-      <div className="shelf-ledge" />
-      <div className="shelf-captions">
-        {items.map((it) => (
-          <div key={it.key} className="shelf-slot">
-            {it.caption}
+            <div className="shelf-slot-book">{it.book}</div>
+            <div className="shelf-slot-caption">{it.caption}</div>
           </div>
         ))}
       </div>

@@ -4,6 +4,7 @@ import { auth } from '../lib/firebase'
 import { useStore } from '../store'
 import { Rail } from './Rail'
 import { Cover, coverFor } from './Cover'
+import { SyncBadge } from './SyncBadge'
 
 interface ShelfItem {
   key: string
@@ -53,6 +54,7 @@ export function Home(): JSX.Element {
               {notes.length} note{notes.length === 1 ? '' : 's'}
             </span>
           </div>
+          <SyncBadge compact />
           <button className="pill" onClick={() => go({ name: 'search' })}>
             Search
           </button>

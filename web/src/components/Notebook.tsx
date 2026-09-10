@@ -3,6 +3,7 @@ import { useStore } from '../store'
 import { Rail } from './Rail'
 import { Cover, coverFor } from './Cover'
 import { NoteCard } from './NoteCard'
+import { SyncBadge } from './SyncBadge'
 
 export function Notebook({ id }: { id: string }): JSX.Element {
   const notes = useStore((s) => s.notes)
@@ -40,6 +41,7 @@ export function Notebook({ id }: { id: string }): JSX.Element {
               {notes.filter((n) => n.notebook === id).length === 1 ? '' : 's'}
             </span>
           </div>
+          <SyncBadge compact />
           <button className="pill" onClick={() => go({ name: 'new', notebook: id })}>
             ＋ New note
           </button>

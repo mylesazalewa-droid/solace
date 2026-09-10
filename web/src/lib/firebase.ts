@@ -1,6 +1,10 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
+} from 'firebase/firestore'
 
 // Same Firebase project the desktop app syncs to. A web config is public by design.
 const app = initializeApp({
@@ -14,5 +18,10 @@ const app = initializeApp({
 
 export const auth = getAuth(app)
 void setPersistence(auth, browserLocalPersistence)
-export const db = getFirestore(app)
+
+// offline-capable local cache so edits survive a flaky connection / reload
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+})
+
 export const googleProvider = new GoogleAuthProvider()

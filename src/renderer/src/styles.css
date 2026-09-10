@@ -713,39 +713,66 @@ input {
   background: color-mix(in srgb, var(--gold) 14%, transparent);
 }
 
-/* one oak shelf holding a row of books */
+/* a shelf of books — a responsive grid so books + their captions never drift apart */
 .shelf-row {
   position: relative;
-  padding-top: 16px;
-  margin-bottom: 44px;
+  padding-top: 14px;
+  margin-bottom: 20px;
 }
 .shelf-books {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 26px;
-  padding: 0 24px 0;
-  min-height: 148px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 118px));
+  justify-content: start;
+  gap: 38px 30px;
+  padding: 6px 22px 8px;
+  align-items: end;
 }
 .shelf-slot {
-  width: 104px;
-  flex: none;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  transition: opacity 0.14s var(--ease);
+}
+.shelf-slot.dragging {
+  opacity: 0.35;
+}
+.shelf-slot.drop-here {
+  position: relative;
+}
+.shelf-slot.drop-here::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 0;
+  bottom: 26px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--gold);
+}
+.shelf-slot-book {
+  position: relative;
+  width: 100%;
+  display: flex;
   align-items: flex-end;
 }
-.shelf-captions {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 26px;
-  padding: 16px 24px 0;
+/* soft contact shadow so each cover reads as a book standing on the parchment */
+.shelf-slot-book::after {
+  content: '';
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  bottom: -15px;
+  height: 17px;
+  background: radial-gradient(60% 100% at 50% 0%, rgba(74, 48, 24, 0.34), transparent 72%);
+  filter: blur(2.5px);
+  pointer-events: none;
 }
-.shelf-captions .shelf-slot {
-  align-items: flex-start;
+.shelf-slot-caption {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 .book-caption {
   border: 0;
@@ -757,42 +784,6 @@ input {
   gap: 1px;
   width: 100%;
   padding: 0 2px;
-}
-/* the plank: a top surface + a thicker front edge, with a soft cast shadow */
-.shelf-ledge {
-  position: relative;
-  height: 15px;
-  margin: 0 1px;
-  border-radius: 4px 4px 2px 2px;
-  background-color: #dcb37f;
-  background-image: var(--wood-grain);
-  box-shadow:
-    inset 0 2px 0 rgba(255, 248, 234, 0.6),
-    inset 0 -2px 3px rgba(120, 78, 40, 0.35);
-}
-.shelf-ledge::before {
-  content: '';
-  position: absolute;
-  left: -1px;
-  right: -1px;
-  top: calc(100% - 1px);
-  height: 13px;
-  border-radius: 0 0 5px 5px;
-  background: var(--wood-face);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 224, 188, 0.3),
-    inset 0 -3px 5px rgba(0, 0, 0, 0.18);
-}
-.shelf-ledge::after {
-  content: '';
-  position: absolute;
-  left: 4%;
-  right: 4%;
-  top: calc(100% + 13px);
-  height: 30px;
-  background: radial-gradient(58% 100% at 50% 0%, rgba(74, 48, 24, 0.3), transparent 74%);
-  filter: blur(3px);
-  pointer-events: none;
 }
 
 .library-empty {
@@ -3781,25 +3772,8 @@ input {
   font-size: 12.5px;
 }
 
-/* ===== shelf drag-to-reorder ===== */
-.shelf-books .shelf-slot[draggable='true'] {
+.shelf-slot[draggable='true'] {
   cursor: grab;
-}
-.shelf-books .shelf-slot.dragging {
-  opacity: 0.4;
-}
-.shelf-books .shelf-slot.drop-here {
-  position: relative;
-}
-.shelf-books .shelf-slot.drop-here::after {
-  content: '';
-  position: absolute;
-  left: -7px;
-  top: 4%;
-  bottom: 4%;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--gold, var(--grass));
 }
 
 /* ===== sync: google button + divider ===== */
