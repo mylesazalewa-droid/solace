@@ -489,12 +489,14 @@ export function installDevMock(): void {
       notebooks: {},
       templates: [],
       metaUpdated: new Date(0).toISOString(),
-      device: 'dev'
+      device: 'dev',
+      deleted: []
     }),
     syncApply: async () => snapshot(),
     syncStateGet: async () => ({}),
     syncStateSet: async () => {},
     syncStateClear: async () => {},
+    syncClearTombstones: async () => {},
     syncDevice: async () => 'dev-browser',
     googleSignIn: async () => {
       throw new Error('Google sign-in only works in the packaged app.')

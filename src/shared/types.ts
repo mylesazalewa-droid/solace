@@ -102,6 +102,8 @@ export interface SyncSnapshot {
   /** ISO mtime of the newest piece of vault metadata */
   metaUpdated: string
   device: string
+  /** vault-relative paths deleted locally that still need a cloud tombstone */
+  deleted: string[]
 }
 
 export interface SyncApply {

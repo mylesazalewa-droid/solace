@@ -134,6 +134,8 @@ const api = {
   syncStateGet: (): Promise<SyncState> => ipcRenderer.invoke('sync:state:get'),
   syncStateSet: (state: SyncState): Promise<void> => ipcRenderer.invoke('sync:state:set', state),
   syncStateClear: (): Promise<void> => ipcRenderer.invoke('sync:state:clear'),
+  syncClearTombstones: (paths: string[]): Promise<void> =>
+    ipcRenderer.invoke('sync:tombstones:clear', paths),
   syncDevice: (): Promise<string> => ipcRenderer.invoke('sync:device'),
   googleSignIn: (): Promise<{ idToken: string; accessToken: string }> =>
     ipcRenderer.invoke('google:signin'),

@@ -35,6 +35,8 @@ import {
   readSyncState,
   writeSyncState,
   clearSyncState,
+  recordTombstones,
+  clearTombstones,
   deviceName
 } from './sync'
 import { signInWithGoogle } from './googleAuth'
@@ -181,19 +183,19 @@ function register(): void {
 
   ipcMain.handle('note:delete', async (_e, noteId: string) => {
     const vault = await currentVault()
-    await deleteNote(vault, noteId)
+    await recordTombstones(vault, await deleteNote(vault, noteId))
     return scanVault(vault)
   })
 
   ipcMain.handle('notebook:delete', async (_e, notebookId: string) => {
     const vault = await currentVault()
-    await deleteNotebook(vault, notebookId)
+    await recordTombstones(vault, await deleteNotebook(vault, notebookId))
     return scanVault(vault)
   })
 
   ipcMain.handle('folder:delete', async (_e, notebookId: string, folderId: string) => {
     const vault = await currentVault()
-    await deleteFolder(vault, notebookId, folderId)
+    await recordTombstones(vault, await deleteFolder(vault, notebookId, folderId))
     return scanVault(vault)
   })
 
@@ -362,6 +364,9 @@ function register(): void {
     writeSyncState(await currentVault(), state)
   )
   ipcMain.handle('sync:state:clear', async () => clearSyncState(await currentVault()))
+  ipcMain.handle('sync:tombstones:clear', async (_e, paths: string[]) =>
+    clearTombstones(await currentVault(), paths)
+  )
   ipcMain.handle('sync:device', () => deviceName())
   ipcMain.handle('google:signin', () => signInWithGoogle())
 

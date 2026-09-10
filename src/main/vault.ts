@@ -421,28 +421,57 @@ async function trashPath(vault: string, originalRelPath: string): Promise<string
   return join(trash, `${stamp}__${flat}`)
 }
 
-export async function deleteNote(vault: string, noteId: string): Promise<void> {
-  const abs = join(vault, noteId.split('/').join(sep))
-  await fs.rename(abs, await trashPath(vault, noteId))
+/** every .md file under a dir, as vault-relative "a/b.md" paths */
+async function markdownPathsUnder(vault: string, absDir: string): Promise<string[]> {
+  const out: string[] = []
+  async function walk(dir: string): Promise<void> {
+    let names: string[] = []
+    try {
+      names = await fs.readdir(dir)
+    } catch {
+      return
+    }
+    for (const name of names) {
+      const p = join(dir, name)
+      const st = await fs.stat(p).catch(() => null)
+      if (!st) continue
+      if (st.isDirectory()) await walk(p)
+      else if (name.toLowerCase().endsWith('.md'))
+        out.push(relative(vault, p).split(sep).join('/'))
+    }
+  }
+  await walk(absDir)
+  return out
 }
 
-export async function deleteNotebook(vault: string, notebookId: string): Promise<void> {
+/** all three return the vault-relative paths of the notes that were trashed */
+export async function deleteNote(vault: string, noteId: string): Promise<string[]> {
+  const abs = join(vault, noteId.split('/').join(sep))
+  await fs.rename(abs, await trashPath(vault, noteId))
+  return [noteId]
+}
+
+export async function deleteNotebook(vault: string, notebookId: string): Promise<string[]> {
   const abs = join(vault, safeName(notebookId))
+  const paths = await markdownPathsUnder(vault, abs)
   await fs.rename(abs, await trashPath(vault, notebookId))
   const covers = await readNotebookCovers(vault)
   if (covers[notebookId]) {
     delete covers[notebookId]
     await writeNotebookCovers(vault, covers)
   }
+  return paths
 }
 
 export async function deleteFolder(
   vault: string,
   notebookId: string,
   folderId: string
-): Promise<void> {
+): Promise<string[]> {
   const abs = join(vault, notebookId, folderId)
+  const paths = await markdownPathsUnder(vault, abs)
   await fs.rename(abs, await trashPath(vault, `${notebookId}/${folderId}`))
+  return paths
 }
 
 export async function moveNote(

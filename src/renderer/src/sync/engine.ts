@@ -55,15 +55,26 @@ export async function runSync(db: Firestore, uid: string, device: string): Promi
   })
 
   const L = new Map(local.notes.map((n) => [n.path, n]))
+  const deletedHere = new Set(local.deleted ?? [])
   const newState: SyncState = { ...state }
   const apply: SyncApply = { writes: [], deletes: [], conflicts: [] }
   const pushes: SyncNote[] = []
   const tombstones: string[] = []
+  const clearedTombstones: string[] = []
 
-  for (const path of new Set([...L.keys(), ...R.keys()])) {
+  for (const path of new Set([...L.keys(), ...R.keys(), ...deletedHere])) {
     const l = L.get(path)
     const r = R.get(path)
     const s = state[path]
+
+    // deleted on this device — push the delete to the cloud and never resurrect it,
+    // even if it was never in sync-state
+    if (deletedHere.has(path) && !l) {
+      if (r && !r.deleted) tombstones.push(path)
+      else clearedTombstones.push(path) // already gone remotely — nothing to do
+      delete newState[path]
+      continue
+    }
 
     if (l && !r) {
       pushes.push(l)
@@ -181,6 +192,13 @@ export async function runSync(db: Firestore, uid: string, device: string): Promi
   await flush()
 
   await window.solace.syncStateSet(newState)
+  // the tombstones we just pushed (and any that were already gone remotely) are done
+  const doneTombstones = [
+    ...clearedTombstones,
+    ...tombstones.filter((p) => deletedHere.has(p))
+  ]
+  if (doneTombstones.length)
+    await window.solace.syncClearTombstones?.(doneTombstones).catch(() => {})
   if (willTouchDisk) await useStore.getState().refresh()
 
   return {
