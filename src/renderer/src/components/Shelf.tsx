@@ -91,6 +91,9 @@ export function Shelf(): JSX.Element {
           <button className="hr-item" onClick={() => useStore.setState({ sortOpen: true })}>
             <Icon name="sparkle" /> <span>Sort my notes</span>
           </button>
+          <button className="hr-item" onClick={() => go({ name: 'trash' })}>
+            <Icon name="trash" /> <span>Trash</span>
+          </button>
         </nav>
 
         <div className="hr-foot">

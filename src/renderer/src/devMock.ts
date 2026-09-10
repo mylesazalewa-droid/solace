@@ -502,6 +502,13 @@ export function installDevMock(): void {
     googleSignIn: async () => {
       throw new Error('Google sign-in only works in the packaged app.')
     },
+    trashList: async () => [
+      { id: 'a', deletedAt: new Date(Date.now() - 3600_000).toISOString(), originalPath: 'Journal/old-thought.md', kind: 'note' as const, name: 'An old thought', blurb: 'Something I wrote and then deleted.' },
+      { id: 'b', deletedAt: new Date(Date.now() - 2 * 86400_000).toISOString(), originalPath: 'Scratch', kind: 'notebook' as const, name: 'Scratch', blurb: '3 notes' }
+    ],
+    trashRestore: async () => snapshot(),
+    trashPurge: async () => [],
+    trashEmpty: async () => [],
     scriptureRefs: async (text: string) => {
       const m = text.match(/\b(John|Mark|Psalm|Genesis|Luke)\s+(\d+)(?::(\d+))?/i)
       return m

@@ -42,6 +42,7 @@ import {
 import { signInWithGoogle } from './googleAuth'
 import { checkForUpdate } from './updates'
 import { parseRefs, lookup as lookupVerse, type Translation } from './scripture'
+import { listTrash, restoreTrash, purgeTrash, emptyTrash } from './trash'
 import type {
   ExportFormat,
   NoteTemplate,
@@ -403,6 +404,22 @@ function register(): void {
 
   ipcMain.handle('app:version', () => app.getVersion())
   ipcMain.handle('app:checkUpdate', () => checkForUpdate())
+
+  // ---- trash ----
+  ipcMain.handle('trash:list', async () => listTrash(await currentVault()))
+  ipcMain.handle('trash:restore', async (_e, id: string) => {
+    const vault = await currentVault()
+    await restoreTrash(vault, id)
+    return scanVault(vault)
+  })
+  ipcMain.handle('trash:purge', async (_e, id: string) => {
+    await purgeTrash(await currentVault(), id)
+    return listTrash(await currentVault())
+  })
+  ipcMain.handle('trash:empty', async () => {
+    await emptyTrash(await currentVault())
+    return []
+  })
 
   // ---- scripture ----
   ipcMain.handle('scripture:refs', (_e, text: string) => parseRefs(text))

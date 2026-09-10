@@ -192,6 +192,15 @@ export interface TaskItem {
   updated: string
 }
 
+export interface TrashItem {
+  id: string
+  deletedAt: string
+  originalPath: string
+  kind: 'note' | 'notebook' | 'folder'
+  name: string
+  blurb: string
+}
+
 export interface SortProposal {
   noteId: string
   title: string

@@ -3984,3 +3984,97 @@ input {
   margin: 0;
   color: var(--faint);
 }
+
+/* ===== trash ===== */
+.trash-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 30px);
+}
+.trash-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.trash-head h2 {
+  font-size: 21px;
+  color: var(--ink);
+}
+.trash-head .grow {
+  flex: 1;
+}
+.trash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.trash-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--card);
+}
+.trash-kind {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--raise);
+  color: var(--muted);
+  flex: none;
+}
+.trash-kind.k-notebook,
+.trash-kind.k-folder {
+  color: var(--gold);
+}
+.trash-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+}
+.trash-name {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trash-sub {
+  font-size: 11.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trash-when {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--faint);
+  flex: none;
+}
+.icon-x {
+  border: 0;
+  background: none;
+  color: var(--faint);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 7px;
+  flex: none;
+}
+.icon-x:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.trash-empty {
+  color: var(--faint);
+  text-align: center;
+  padding: 40px;
+}

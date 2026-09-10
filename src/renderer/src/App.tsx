@@ -7,6 +7,7 @@ import { NoteEditor } from './components/NoteEditor'
 import { SearchView } from './components/SearchView'
 import { CalendarView } from './components/CalendarView'
 import { AgendaView } from './components/AgendaView'
+import { TrashView } from './components/TrashView'
 import { Settings } from './components/Settings'
 import { CoverPicker } from './components/CoverPicker'
 import { ImportPanel } from './components/ImportPanel'
@@ -57,13 +58,13 @@ export default function App(): JSX.Element {
   return (
     <div className="app">
       <div className="titlebar">
-        {route.name !== 'welcome' && route.name !== 'shelf' && route.name !== 'calendar' && route.name !== 'agenda' && (
+        {route.name !== 'welcome' && route.name !== 'shelf' && route.name !== 'calendar' && route.name !== 'agenda' && route.name !== 'trash' && (
           <button className="back-btn" onClick={back}>
             <span className="chev">‹</span> All notebooks
           </button>
         )}
         <span className="grow" />
-        {route.name !== 'welcome' && route.name !== 'shelf' && route.name !== 'calendar' && route.name !== 'agenda' && (
+        {route.name !== 'welcome' && route.name !== 'shelf' && route.name !== 'calendar' && route.name !== 'agenda' && route.name !== 'trash' && (
           <>
             <button className="tbtn" onClick={() => go({ name: 'search', scope: 'all', query: '' })}>
               Search <kbd>⌘K</kbd>
@@ -96,6 +97,8 @@ export default function App(): JSX.Element {
             <CalendarView />
           ) : route.name === 'agenda' ? (
             <AgendaView />
+          ) : route.name === 'trash' ? (
+            <TrashView />
           ) : route.name === 'notebook' ? (
             <NotebookView />
           ) : route.name === 'note' ? (

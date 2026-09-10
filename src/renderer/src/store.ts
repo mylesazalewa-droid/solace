@@ -15,6 +15,7 @@ export type Route =
   | { name: 'shelf' }
   | { name: 'calendar' }
   | { name: 'agenda' }
+  | { name: 'trash' }
   | { name: 'notebook'; notebookId: string; folderId: string | null }
   | { name: 'note'; noteId: string; backTo: Route }
   | { name: 'search'; scope: string; query: string }

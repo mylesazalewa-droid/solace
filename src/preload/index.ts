@@ -16,7 +16,8 @@ import type {
   SyncApply,
   SyncState,
   VerseRef,
-  VerseText
+  VerseText,
+  TrashItem
 } from '../shared/types'
 
 const api = {
@@ -141,6 +142,11 @@ const api = {
   syncDevice: (): Promise<string> => ipcRenderer.invoke('sync:device'),
   googleSignIn: (): Promise<{ idToken: string; accessToken: string }> =>
     ipcRenderer.invoke('google:signin'),
+
+  trashList: (): Promise<TrashItem[]> => ipcRenderer.invoke('trash:list'),
+  trashRestore: (id: string): Promise<VaultSnapshot> => ipcRenderer.invoke('trash:restore', id),
+  trashPurge: (id: string): Promise<TrashItem[]> => ipcRenderer.invoke('trash:purge', id),
+  trashEmpty: (): Promise<TrashItem[]> => ipcRenderer.invoke('trash:empty'),
 
   scriptureRefs: (text: string): Promise<VerseRef[]> =>
     ipcRenderer.invoke('scripture:refs', text),
