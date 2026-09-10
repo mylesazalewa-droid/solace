@@ -1,6 +1,6 @@
 {
   "name": "solace",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Solace \u2014 a calm notes app: a shelf of notebooks that file and find themselves.",
   "main": "./out/main/index.js",
   "author": "Myles",
