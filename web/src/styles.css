@@ -686,19 +686,41 @@ h3 {
   z-index: 5;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px clamp(14px, 3vw, 26px);
-  background: color-mix(in srgb, var(--paper) 90%, transparent);
-  backdrop-filter: blur(8px);
+  gap: 8px;
+  padding: 12px clamp(12px, 3vw, 26px);
+  padding-top: calc(12px + env(safe-area-inset-top));
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
 .editor-bar .grow {
   flex: 1;
+  min-width: 0;
+}
+.editor-bar .back {
+  flex: none;
+}
+.editor-bar .seg {
+  margin-left: auto;
+}
+.ed-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 6px;
 }
 .save-state {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
   color: var(--faint);
+  text-transform: none;
+  letter-spacing: 0;
 }
 .save-state.dirty {
   color: var(--grass-deep);
@@ -732,7 +754,10 @@ h3 {
   font-size: 13px;
   cursor: pointer;
   color: var(--muted);
-  padding: 4px 6px;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
 }
 .tbtn.danger {
   color: var(--danger);
@@ -891,7 +916,7 @@ h3 {
   }
   .lib-main,
   .nb-main {
-    padding: 16px 14px 90px;
+    padding: calc(16px + env(safe-area-inset-top)) 14px 90px;
   }
   .lib-head,
   .nb-head {

@@ -90,12 +90,8 @@ export function NoteScreen({ id }: { id: string }): JSX.Element {
     <div className="editor">
       <div className="editor-bar">
         <button className="back" onClick={() => { void flush(); go(back) }}>
-          ‹ {note.notebook}
+          ‹ Back
         </button>
-        <span className="grow" />
-        <span className={`save-state ${state === 'dirty' ? 'dirty' : ''}`}>
-          {state === 'saved' ? 'Saved' : state === 'dirty' ? 'Saving…' : ''}
-        </span>
         <div className="seg">
           <button className={tab === 'read' ? 'on' : ''} onClick={() => { void flush(); setTab('read') }}>
             Read
@@ -104,13 +100,21 @@ export function NoteScreen({ id }: { id: string }): JSX.Element {
             Write
           </button>
         </div>
-        <button className="tbtn danger" onClick={del}>
-          Delete
+        <button className="tbtn danger" onClick={del} aria-label="Delete note">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+          </svg>
         </button>
       </div>
 
       <div className="editor-scroll">
         <div className="editor-inner">
+          <div className="ed-meta">
+            <span>{note.notebook}</span>
+            <span className={`save-state ${state === 'dirty' ? 'dirty' : ''}`}>
+              {state === 'saved' ? 'Saved' : state === 'dirty' ? 'Saving…' : ''}
+            </span>
+          </div>
           <input
             className="ed-title"
             value={title}
