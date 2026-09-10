@@ -143,6 +143,12 @@ const api = {
   googleSignIn: (): Promise<{ idToken: string; accessToken: string }> =>
     ipcRenderer.invoke('google:signin'),
 
+  attachImage: (
+    noteId: string,
+    dataUrl: string
+  ): Promise<{ markdownPath: string; name: string }> =>
+    ipcRenderer.invoke('note:attach', noteId, dataUrl),
+
   trashList: (): Promise<TrashItem[]> => ipcRenderer.invoke('trash:list'),
   trashRestore: (id: string): Promise<VaultSnapshot> => ipcRenderer.invoke('trash:restore', id),
   trashPurge: (id: string): Promise<TrashItem[]> => ipcRenderer.invoke('trash:purge', id),

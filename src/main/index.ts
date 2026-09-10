@@ -1,5 +1,15 @@
-import { app, shell, BrowserWindow, ipcMain, dialog, nativeTheme } from 'electron'
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  nativeTheme,
+  protocol,
+  net
+} from 'electron'
 import { join } from 'path'
+import { pathToFileURL } from 'url'
 import { promises as fs, existsSync } from 'fs'
 import { getConfig, setConfig } from './config'
 import {
@@ -43,6 +53,7 @@ import { signInWithGoogle } from './googleAuth'
 import { checkForUpdate } from './updates'
 import { parseRefs, lookup as lookupVerse, type Translation } from './scripture'
 import { listTrash, restoreTrash, purgeTrash, emptyTrash } from './trash'
+import { saveAttachment } from './attach'
 import type {
   ExportFormat,
   NoteTemplate,
@@ -58,6 +69,24 @@ const preloadPath = join(app.getAppPath(), 'out/preload/index.js')
 const rendererHtml = join(app.getAppPath(), 'out/renderer/index.html')
 
 console.log('[solace] appPath', app.getAppPath(), '· preload exists:', existsSync(preloadPath))
+
+// serve note attachments to the renderer — a plain file:// subresource is blocked
+// from a file:// page. URL shape: solace-attach://f/<uri-encoded absolute path>
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'solace-attach', privileges: { standard: true, secure: true, supportFetchAPI: true } }
+])
+async function registerAttachProtocol(): Promise<void> {
+  protocol.handle('solace-attach', async (request) => {
+    try {
+      const abs = decodeURIComponent(new URL(request.url).pathname.replace(/^\//, ''))
+      const vault = (await getConfig()).vaultPath
+      if (!vault || !abs.startsWith(vault)) return new Response('', { status: 403 })
+      return net.fetch(pathToFileURL(abs).toString())
+    } catch {
+      return new Response('', { status: 404 })
+    }
+  })
+}
 
 let mainWindow: BrowserWindow | null = null
 
@@ -147,6 +176,10 @@ function register(): void {
     await maybeSnapshot(vault, noteId).catch(() => {})
     return saveNote(vault, noteId, patch)
   })
+
+  ipcMain.handle('note:attach', async (_e, noteId: string, dataUrl: string) =>
+    saveAttachment(await currentVault(), noteId, dataUrl)
+  )
 
   ipcMain.handle('note:create', async (_e, args) => {
     const vault = await currentVault()
@@ -445,6 +478,7 @@ if (!app.requestSingleInstanceLock()) {
   app.whenReady().then(async () => {
     const cfg = await getConfig()
     nativeTheme.themeSource = cfg.theme
+    await registerAttachProtocol()
     register()
     createWindow()
     setupQuickCapture(() => mainWindow)

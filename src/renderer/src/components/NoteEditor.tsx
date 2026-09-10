@@ -56,6 +56,8 @@ export function NoteEditor(): JSX.Element {
   const [cmView, setCmView] = useState<EditorView | null>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const bibleTranslation = config?.bibleTranslation ?? 'kjv'
+  const noteIdRef = useRef<string | null>(null)
+  noteIdRef.current = noteId
 
   useEffect(() => {
     if (mode !== 'read' || !previewRef.current) return
@@ -72,7 +74,40 @@ export function NoteEditor(): JSX.Element {
     () => [
       markdown({ base: markdownLanguage }),
       EditorView.lineWrapping,
-      wikiLinkComplete(() => titlesRef.current)
+      wikiLinkComplete(() => titlesRef.current),
+      EditorView.domEventHandlers({
+        paste(e, view) {
+          const items = e.clipboardData?.items
+          const id = noteIdRef.current
+          if (!items || !id) return false
+          for (const it of Array.from(items)) {
+            if (!it.type.startsWith('image/')) continue
+            const file = it.getAsFile()
+            if (!file) continue
+            e.preventDefault()
+            const reader = new FileReader()
+            reader.onload = async () => {
+              try {
+                const { markdownPath } = await window.solace.attachImage(
+                  id,
+                  reader.result as string
+                )
+                const pos = view.state.selection.main.head
+                view.dispatch({
+                  changes: { from: pos, insert: `\n![](${markdownPath})\n` },
+                  selection: { anchor: pos + markdownPath.length + 4 }
+                })
+                view.focus()
+              } catch {
+                /* ignore */
+              }
+            }
+            reader.readAsDataURL(file)
+            return true
+          }
+          return false
+        }
+      })
     ],
     []
   )
@@ -121,11 +156,33 @@ export function NoteEditor(): JSX.Element {
     if (route.name === 'note') go({ name: 'note', noteId: id, backTo: route.backTo })
   }
 
-  const renderWithWikiLinks = (src: string): string =>
-    src.replace(/\[\[([^\]|]+?)(?:\|([^\]]+))?\]\]/g, (_m, target: string, label?: string) => {
-      const t = target.trim()
-      return `[${(label ?? t).trim()}](#wiki:${encodeURIComponent(t)})`
-    })
+  const renderWithWikiLinks = (src: string): string => {
+    let out = src.replace(
+      /\[\[([^\]|]+?)(?:\|([^\]]+))?\]\]/g,
+      (_m, target: string, label?: string) => {
+        const t = target.trim()
+        return `[${(label ?? t).trim()}](#wiki:${encodeURIComponent(t)})`
+      }
+    )
+    // resolve relative image paths (attachments) to file:// so preview can load them
+    const vault = config?.vaultPath
+    if (vault && noteId) {
+      const noteDir = noteId.split('/').slice(0, -1)
+      out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (m, alt: string, p: string) => {
+        if (/^(https?:|file:|data:|#|\/)/i.test(p)) return m
+        const dir = [...noteDir]
+        let rel = p.trim()
+        while (rel.startsWith('../')) {
+          dir.pop()
+          rel = rel.slice(3)
+        }
+        rel = rel.replace(/^\.\//, '')
+        const abs = `solace-attach://f/${encodeURIComponent(`${vault}/${[...dir, rel].join('/')}`)}`
+        return `![${alt}](${abs})`
+      })
+    }
+    return out
+  }
 
   const onPreviewClick = (e: React.MouseEvent): void => {
     const a = (e.target as HTMLElement).closest('a')
