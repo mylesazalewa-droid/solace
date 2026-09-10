@@ -58,7 +58,7 @@ export function SignIn(): JSX.Element {
   return (
     <div className="signin">
       <div className="signin-card">
-        <div className="mark">▲</div>
+        <span className="brand-mark" aria-hidden />
         <h1>Solace</h1>
         <p className="muted">Sign in to reach your notes.</p>
 

@@ -5,6 +5,8 @@ import { watchNotes, watchCovers } from './lib/notes'
 import { useStore } from './store'
 import { SignIn } from './components/SignIn'
 import { Home } from './components/Home'
+import { Notebook } from './components/Notebook'
+import { SearchView } from './components/SearchView'
 import { NoteScreen } from './components/NoteScreen'
 import { NewNote } from './components/NewNote'
 
@@ -33,13 +35,15 @@ export function App(): JSX.Element {
   if (user === undefined) {
     return (
       <div className="splash">
-        <div className="mark">▲</div>
+        <span className="brand-mark" aria-hidden />
       </div>
     )
   }
   if (user === null) return <SignIn />
 
   if (route.name === 'note') return <NoteScreen id={route.id} />
-  if (route.name === 'new') return <NewNote />
+  if (route.name === 'new') return <NewNote notebook={route.notebook} />
+  if (route.name === 'notebook') return <Notebook id={route.id} />
+  if (route.name === 'search') return <SearchView />
   return <Home />
 }
