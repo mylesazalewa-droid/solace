@@ -12,10 +12,13 @@ import { Menu } from './Menu'
 import { Icon } from './Icon'
 import { TagEditor } from './TagEditor'
 import { FormatBar } from './FormatBar'
-import { wikiLinkComplete } from '../editor/wikiComplete'
+import { wikiLinkSource } from '../editor/wikiComplete'
 import { attachScripture } from '../editor/scripturePreview'
 import { cmScripture } from '../editor/cmScripture'
 import { editorKeymap } from '../editor/keybindings'
+import { slashSource, insertAtLine, type SlashAction } from '../editor/slashCommands'
+import { editorCompletion } from '../editor/completion'
+import { toggleLinePrefix, insertLink } from '../editor/format'
 import { diffWords, hasRealChange } from '../diff'
 import type { NoteDoc } from '../../../shared/types'
 
@@ -99,13 +102,62 @@ export function NoteEditor(): JSX.Element {
   const bibleRef = useRef<'kjv' | 'bbe'>('kjv')
   bibleRef.current = bibleTranslation
 
+  const attachFileAt = useCallback(async (view: EditorView): Promise<void> => {
+    const id = noteIdRef.current
+    if (!id) return
+    try {
+      const results = await window.solace.attachFilesPick(id)
+      if (!results.length) return
+      const snippet = results
+        .map(({ markdownPath, name, kind }) => {
+          if (kind === 'image') return `![](${markdownPath})`
+          if (kind === 'audio') return `<audio controls src="${markdownPath}"></audio>`
+          return `[📎 ${name}](${markdownPath})`
+        })
+        .join('\n')
+      const pos = view.state.selection.main.head
+      const insert = `\n${snippet}\n`
+      view.dispatch({ changes: { from: pos, insert }, selection: { anchor: pos + insert.length } })
+      view.focus()
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Could not attach file')
+    }
+  }, [])
+
+  // `/` command menu — read live from a ref so the editor extension stays stable
+  const slashActionsRef = useRef<SlashAction[]>([])
+  slashActionsRef.current = [
+    { label: 'Heading 1', hint: 'big section title', run: (v) => toggleLinePrefix(v, '# ') },
+    { label: 'Heading 2', hint: 'section title', run: (v) => toggleLinePrefix(v, '## ') },
+    { label: 'Heading 3', hint: 'small heading', run: (v) => toggleLinePrefix(v, '### ') },
+    { label: 'Bullet list', hint: '- item', run: (v) => toggleLinePrefix(v, '- ') },
+    { label: 'Numbered list', hint: '1. item', run: (v) => toggleLinePrefix(v, '1. ') },
+    { label: 'Checkbox', hint: 'to-do item', run: (v) => toggleLinePrefix(v, '- [ ] ') },
+    { label: 'Quote', hint: '> quote', run: (v) => toggleLinePrefix(v, '> ') },
+    {
+      label: 'Code block',
+      hint: 'fenced code',
+      run: (v) => {
+        const line = v.state.doc.lineAt(v.state.selection.main.head)
+        const needsNewline = line.text.trim().length > 0
+        const from = needsNewline ? line.to : line.from
+        const insert = `${needsNewline ? '\n' : ''}\`\`\`\n\n\`\`\``
+        v.dispatch({ changes: { from, insert }, selection: { anchor: from + insert.length - 4 } })
+        v.focus()
+      }
+    },
+    { label: 'Divider', hint: 'horizontal rule', run: (v) => insertAtLine(v, '---') },
+    { label: 'Link', hint: '[text](url)', run: insertLink },
+    { label: 'Attach file', hint: 'photo, audio, or any file', run: (v) => void attachFileAt(v) }
+  ]
+
   const cmExtensions = useMemo(
     () => [
       markdown({ base: markdownLanguage }),
       EditorView.lineWrapping,
       editorKeymap,
       cmScripture(() => bibleRef.current),
-      wikiLinkComplete(() => titlesRef.current),
+      editorCompletion([wikiLinkSource(() => titlesRef.current), slashSource(() => slashActionsRef.current)]),
       EditorView.domEventHandlers({
         paste(e, view) {
           const items = e.clipboardData?.items
@@ -187,6 +239,24 @@ export function NoteEditor(): JSX.Element {
     if (route.name === 'note') go({ name: 'note', noteId: id, backTo: route.backTo })
   }
 
+  // resolve a relative attachment path (note-relative, e.g. "_attachments/x.png" or
+  // "../_attachments/x.png") to a solace-attach:// URL the preview can actually load —
+  // used for image srcs, <audio>/<video> srcs, and plain "attach a file" links alike.
+  const resolveAttachPath = (p: string): string | null => {
+    const vault = config?.vaultPath
+    if (!vault || !noteId) return null
+    if (/^(https?:|file:|data:|#|\/|solace-attach:)/i.test(p)) return null
+    const noteDir = noteId.split('/').slice(0, -1)
+    const dir = [...noteDir]
+    let rel = p.trim()
+    while (rel.startsWith('../')) {
+      dir.pop()
+      rel = rel.slice(3)
+    }
+    rel = rel.replace(/^\.\//, '')
+    return `solace-attach://f/${encodeURIComponent(`${vault}/${[...dir, rel].join('/')}`)}`
+  }
+
   const renderWithWikiLinks = (src: string): string => {
     let out = src.replace(
       /\[\[([^\]|]+?)(?:\|([^\]]+))?\]\]/g,
@@ -195,23 +265,22 @@ export function NoteEditor(): JSX.Element {
         return `[${(label ?? t).trim()}](#wiki:${encodeURIComponent(t)})`
       }
     )
-    // resolve relative image paths (attachments) to file:// so preview can load them
-    const vault = config?.vaultPath
-    if (vault && noteId) {
-      const noteDir = noteId.split('/').slice(0, -1)
-      out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (m, alt: string, p: string) => {
-        if (/^(https?:|file:|data:|#|\/)/i.test(p)) return m
-        const dir = [...noteDir]
-        let rel = p.trim()
-        while (rel.startsWith('../')) {
-          dir.pop()
-          rel = rel.slice(3)
-        }
-        rel = rel.replace(/^\.\//, '')
-        const abs = `solace-attach://f/${encodeURIComponent(`${vault}/${[...dir, rel].join('/')}`)}`
-        return `![${alt}](${abs})`
-      })
-    }
+    // images
+    out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (m, alt: string, p: string) => {
+      const abs = resolveAttachPath(p)
+      return abs ? `![${alt}](${abs})` : m
+    })
+    // <audio>/<video src="...">
+    out = out.replace(/(<(?:audio|video)[^>]*\ssrc=")([^"]+)(")/gi, (m, pre, p, post) => {
+      const abs = resolveAttachPath(p)
+      return abs ? `${pre}${abs}${post}` : m
+    })
+    // plain links to an attached file (anything not already turned into a #wiki: link)
+    out = out.replace(/(?<!!)\[([^\]]*)\]\(([^)]+)\)/g, (m, label: string, p: string) => {
+      if (p.startsWith('#wiki:')) return m
+      const abs = resolveAttachPath(p)
+      return abs ? `[${label}](${abs})` : m
+    })
     return out
   }
 
@@ -224,6 +293,9 @@ export function NoteEditor(): JSX.Element {
       const target = decodeURIComponent(href.slice(6)).toLowerCase()
       const hit = notes.find((n) => n.title.trim().toLowerCase() === target)
       if (hit) openRef(hit.id)
+    } else if (href.startsWith('solace-attach://')) {
+      e.preventDefault()
+      window.solace.openAttachment(href).catch(() => {})
     } else if (/^https?:/.test(href)) {
       e.preventDefault()
       window.solace.openUrl(href)
@@ -633,7 +705,7 @@ export function NoteEditor(): JSX.Element {
 
           {mode === 'write' ? (
             <>
-              <FormatBar view={cmView} />
+              <FormatBar view={cmView} onAttach={() => cmView && attachFileAt(cmView)} />
               <CodeMirror
                 ref={cmRef}
                 className="cm-theme"

@@ -17,7 +17,13 @@ const BTNS: { key: string; label: JSX.Element; title: string; run: (v: EditorVie
   { key: 'link', title: 'Link', label: <span>🔗</span>, run: insertLink }
 ]
 
-export function FormatBar({ view }: { view: EditorView | null }): JSX.Element {
+export function FormatBar({
+  view,
+  onAttach
+}: {
+  view: EditorView | null
+  onAttach?: () => void
+}): JSX.Element {
   return (
     <div className="format-bar">
       {BTNS.map((b) => (
@@ -33,8 +39,13 @@ export function FormatBar({ view }: { view: EditorView | null }): JSX.Element {
           {b.label}
         </button>
       ))}
+      {onAttach && (
+        <button className="fb-btn" title="Attach a file" onMouseDown={(e) => e.preventDefault()} onClick={onAttach}>
+          📎
+        </button>
+      )}
       <span className="fb-hint">
-        Type <kbd>[[</kbd> to link a note
+        Type <kbd>[[</kbd> to link a note, <kbd>/</kbd> for commands
       </span>
     </div>
   )

@@ -1,18 +1,11 @@
-import {
-  autocompletion,
-  completionKeymap,
-  type CompletionContext,
-  type CompletionResult
-} from '@codemirror/autocomplete'
-import { keymap } from '@codemirror/view'
-import type { Extension } from '@codemirror/state'
+import type { CompletionContext, CompletionResult } from '@codemirror/autocomplete'
 
 /**
  * `[[` opens a picker of note titles. Selecting one inserts `[[Title]]`.
  * `getTitles` is read live so new notes show up without rebuilding the editor.
  */
-export function wikiLinkComplete(getTitles: () => string[]): Extension {
-  const source = (ctx: CompletionContext): CompletionResult | null => {
+export function wikiLinkSource(getTitles: () => string[]) {
+  return (ctx: CompletionContext): CompletionResult | null => {
     const before = ctx.matchBefore(/\[\[([^[\]\n]*)$/)
     if (!before) return null
     if (before.from === before.to && !ctx.explicit) return null
@@ -42,14 +35,4 @@ export function wikiLinkComplete(getTitles: () => string[]): Extension {
       }))
     }
   }
-
-  return [
-    autocompletion({
-      override: [source],
-      activateOnTyping: true,
-      icons: false,
-      aboveCursor: false
-    }),
-    keymap.of(completionKeymap)
-  ]
 }

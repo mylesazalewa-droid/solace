@@ -2163,6 +2163,18 @@ input {
 .preview strong {
   color: var(--ink);
 }
+.preview img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin: 0.4em 0;
+}
+.preview audio,
+.preview video {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin: 0.6em 0;
+}
 .preview a[href^='#wiki:'] {
   color: var(--violet);
   border-bottom: 1px solid color-mix(in srgb, var(--violet) 30%, transparent);
