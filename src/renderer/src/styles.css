@@ -3536,8 +3536,13 @@ input {
   cursor: default;
 }
 .btn.ghost.danger {
+  background: none;
   color: var(--danger);
   margin-right: auto;
+}
+.btn.ghost.danger:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 .move-body {
   display: flex;
