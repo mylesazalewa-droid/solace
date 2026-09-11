@@ -42,6 +42,7 @@ export function PublishDialog(): JSX.Element | null {
     setErr(null)
     try {
       setState(await publishNote(target.noteId, target.title, target.body))
+      void useStore.getState().refreshPublished()
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Could not publish')
     } finally {
@@ -55,6 +56,7 @@ export function PublishDialog(): JSX.Element | null {
     try {
       await unpublishNote(target.noteId)
       setState(null)
+      void useStore.getState().refreshPublished()
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Could not unpublish')
     } finally {

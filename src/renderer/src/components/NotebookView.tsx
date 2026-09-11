@@ -12,6 +12,7 @@ function fmtDate(iso: string): string {
 
 export function NotebookView(): JSX.Element {
   const snapshot = useStore((s) => s.snapshot)
+  const published = useStore((s) => s.published)
   const route = useStore((s) => s.route)
   const go = useStore((s) => s.go)
   const [scopedQuery, setScopedQuery] = useState('')
@@ -350,6 +351,7 @@ export function NotebookView(): JSX.Element {
                 <span className="t">
                   {n.pinned && <span className="mini-star">★</span>}
                   {n.title}
+                  {published[n.id] && <Icon name="globe" size={10} className="mini-pub" />}
                 </span>
                 <span className="d">{fmtDate(n.updated)}</span>
               </button>
@@ -431,7 +433,14 @@ export function NotebookView(): JSX.Element {
                   {n.pinned ? '★' : '☆'}
                 </button>
                 <div className="lrow-main">
-                  <span className="lrow-title">{n.title}</span>
+                  <span className="lrow-title">
+                    {n.title}
+                    {published[n.id] && (
+                      <span className="pub-badge" title={`Published: ${published[n.id].url}`}>
+                        <Icon name="globe" size={11} /> Published
+                      </span>
+                    )}
+                  </span>
                   <span className="lrow-sum">{n.summary || n.excerpt}</span>
                 </div>
                 <div className="lrow-tags">
@@ -508,7 +517,14 @@ export function NotebookView(): JSX.Element {
                 >
                   {n.pinned ? '★' : '☆'}
                 </button>
-                <h3>{n.title}</h3>
+                <h3>
+                  {n.title}
+                  {published[n.id] && (
+                    <span className="pub-badge" title={`Published: ${published[n.id].url}`}>
+                      <Icon name="globe" size={11} /> Published
+                    </span>
+                  )}
+                </h3>
                 <p className="sum">{n.summary || n.excerpt || 'No preview yet.'}</p>
                 <div className="foot">
                   {n.tags.slice(0, 3).map((t) => (

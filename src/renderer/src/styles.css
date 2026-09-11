@@ -4056,6 +4056,58 @@ input {
   color: var(--faint);
 }
 
+/* ===== published badge ===== */
+.pub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 7px;
+  padding: 1px 7px 1px 5px;
+  border-radius: 999px;
+  background: var(--grass-soft);
+  color: var(--grass-deep);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  vertical-align: middle;
+  border: 0;
+  cursor: default;
+}
+button.pub-badge {
+  cursor: pointer;
+}
+button.pub-badge:hover {
+  background: color-mix(in srgb, var(--grass-soft) 70%, var(--grass) 20%);
+}
+.mini-pub {
+  color: var(--grass-deep);
+  margin-left: 4px;
+  vertical-align: -1px;
+  flex: none;
+}
+.editor-pub-badge {
+  margin-left: 8px;
+}
+
+/* ===== published view ===== */
+.published-row {
+  gap: 10px;
+}
+.published-row .pub-row-main {
+  flex: 1;
+  width: auto;
+}
+.pub-row-nb {
+  margin-left: auto;
+  flex: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--faint);
+  background: var(--raise);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
 /* ===== passages view ===== */
 .passage-filter {
   max-width: 220px;

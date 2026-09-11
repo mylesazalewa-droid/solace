@@ -11,6 +11,7 @@ import {
 import type { Firestore } from 'firebase/firestore'
 import { getFirebase } from './firebase'
 import { runSync } from './engine'
+import { setSyncHandle } from './handle'
 import { useStore } from '../store'
 import { SHARED } from '../../../shared/appConfig'
 import type { SyncStatus } from '../../../shared/types'
@@ -74,6 +75,7 @@ export async function startSync(): Promise<void> {
     boundAuth = auth
     onAuthStateChanged(auth, (u) => {
       user = u
+      setSyncHandle(db && u ? { db, uid: u.uid } : null)
       if (u) {
         set({ state: 'idle', email: u.email ?? undefined, error: undefined })
         void syncNow('auto')
@@ -91,12 +93,8 @@ export async function startSync(): Promise<void> {
   }
 }
 
-/** Live Firestore + signed-in user, for features outside the sync loop (e.g. publish). */
-export function syncHandle(): { db: Firestore; uid: string } | null {
-  return db && user ? { db, uid: user.uid } : null
-}
-
 function teardown(): void {
+  setSyncHandle(null)
   if (timer) {
     clearInterval(timer)
     timer = null
@@ -163,6 +161,7 @@ export async function syncNow(reason: 'auto' | 'manual' = 'manual'): Promise<voi
       lastResult: res,
       error: undefined
     })
+    void useStore.getState().refreshPublished()
   } catch (e) {
     set({ state: 'error', error: friendlyError(e) })
   } finally {

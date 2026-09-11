@@ -30,6 +30,7 @@ export type IconName =
   | 'checklist'
   | 'history'
   | 'logo'
+  | 'globe'
 
 const P: Record<IconName, JSX.Element> = {
   stack: (
@@ -155,6 +156,13 @@ const P: Record<IconName, JSX.Element> = {
       <rect x="5" y="3" width="13" height="18" rx="1.7" />
       <path d="M15 3v18" />
       <path d="M8.4 21v3.4l1.7-1.4 1.7 1.4V21" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3c2.8 2.5 4.2 5.7 4.2 9s-1.4 6.5-4.2 9c-2.8-2.5-4.2-5.7-4.2-9S9.2 5.5 12 3Z" />
     </>
   )
 }

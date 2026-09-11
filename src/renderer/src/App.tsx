@@ -9,6 +9,7 @@ import { CalendarView } from './components/CalendarView'
 import { AgendaView } from './components/AgendaView'
 import { TrashView } from './components/TrashView'
 import { PassagesView } from './components/PassagesView'
+import { PublishedView } from './components/PublishedView'
 import { Settings } from './components/Settings'
 import { CoverPicker } from './components/CoverPicker'
 import { ImportPanel } from './components/ImportPanel'
@@ -60,13 +61,13 @@ export default function App(): JSX.Element {
   return (
     <div className="app">
       <div className="titlebar">
-        {route.name !== 'welcome' && route.name !== 'shelf' && route.name !== 'calendar' && route.name !== 'agenda' && route.name !== 'trash' && route.name !== 'passages' && (
+        {route.name !== 'welcome' && route.name !== 'shelf' && route.name !== 'calendar' && route.name !== 'agenda' && route.name !== 'trash' && route.name !== 'passages' && route.name !== 'published' && (
           <button className="back-btn" onClick={back}>
             <span className="chev">‹</span> All notebooks
           </button>
         )}
         <span className="grow" />
-        {route.name !== 'welcome' && route.name !== 'shelf' && route.name !== 'calendar' && route.name !== 'agenda' && route.name !== 'trash' && route.name !== 'passages' && (
+        {route.name !== 'welcome' && route.name !== 'shelf' && route.name !== 'calendar' && route.name !== 'agenda' && route.name !== 'trash' && route.name !== 'passages' && route.name !== 'published' && (
           <>
             <button className="tbtn" onClick={() => go({ name: 'search', scope: 'all', query: '' })}>
               Search <kbd>⌘K</kbd>
@@ -103,6 +104,8 @@ export default function App(): JSX.Element {
             <TrashView />
           ) : route.name === 'passages' ? (
             <PassagesView />
+          ) : route.name === 'published' ? (
+            <PublishedView />
           ) : route.name === 'notebook' ? (
             <NotebookView />
           ) : route.name === 'note' ? (

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { AppConfig, VaultSnapshot, ImportOutcome, SyncStatus } from '../../shared/types'
+import { listPublished, type PublishedEntry } from './publish'
 
 export interface ImportJob {
   names: string[]
@@ -17,6 +18,7 @@ export type Route =
   | { name: 'agenda' }
   | { name: 'trash' }
   | { name: 'passages' }
+  | { name: 'published' }
   | { name: 'notebook'; notebookId: string; folderId: string | null }
   | { name: 'note'; noteId: string; backTo: Route }
   | { name: 'search'; scope: string; query: string }
@@ -35,6 +37,7 @@ interface State {
   moveTarget: { noteId: string; title: string } | null
   historyFor: { noteId: string; title: string } | null
   publishTarget: { noteId: string; title: string; body: string } | null
+  published: Record<string, PublishedEntry>
   sync: SyncStatus
   importJob: ImportJob | null
 
@@ -52,6 +55,7 @@ interface State {
   }) => Promise<void>
   dismissImportJob: () => void
   openToday: () => Promise<void>
+  refreshPublished: () => Promise<void>
 }
 
 let importProgressBound = false
@@ -71,6 +75,7 @@ export const useStore = create<State>((set, get) => ({
   moveTarget: null,
   historyFor: null,
   publishTarget: null,
+  published: {},
   sync: { state: 'off' },
   importJob: null,
 
@@ -189,6 +194,17 @@ export const useStore = create<State>((set, get) => ({
         backTo: back.name === 'note' ? back.backTo : back
       }
     })
+  },
+
+  refreshPublished: async () => {
+    try {
+      const list = await listPublished()
+      const map: Record<string, PublishedEntry> = {}
+      for (const p of list) map[p.noteId] = p
+      set({ published: map })
+    } catch {
+      /* sync not ready yet — leave whatever we had */
+    }
   }
 }))
 

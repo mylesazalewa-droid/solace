@@ -24,6 +24,7 @@ export function NoteEditor(): JSX.Element {
   const go = useStore((s) => s.go)
   const refresh = useStore((s) => s.refresh)
   const config = useStore((s) => s.config)
+  const published = useStore((s) => s.published)
 
   const [doc, setDoc] = useState<NoteDoc | null>(null)
   const [title, setTitle] = useState('')
@@ -577,6 +578,18 @@ export function NoteEditor(): JSX.Element {
               year: 'numeric'
             })}{' '}
             · saved automatically
+            {noteId && published[noteId] && (
+              <button
+                className="pub-badge editor-pub-badge"
+                onClick={() =>
+                  useStore.setState({
+                    publishTarget: { noteId, title: title.trim() || 'Untitled note', body }
+                  })
+                }
+              >
+                <Icon name="globe" size={11} /> Published
+              </button>
+            )}
           </div>
 
           <div className={`note-summary ${summary ? '' : 'empty'}`}>
