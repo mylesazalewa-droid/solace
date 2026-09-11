@@ -47,8 +47,43 @@ function promoteHeadings(md: string): string {
     .join('\n')
 }
 
+// Non-technical Word docs also fake numbered steps with a bold "1." at the start
+// of an otherwise-plain paragraph (real numbered-list styling never gets used).
+// Turndown escapes the period as "1\." to avoid it reading as a real list marker —
+// undo that and make it one, so it actually renders as a numbered list.
+function promoteNumberedSteps(md: string): string {
+  return md
+    .split('\n')
+    .map((line) => {
+      const m = line.match(/^\*\*(\d{1,3})\\?\.\s*\*\*\s*(.+)$/)
+      return m ? `${m[1]}. ${m[2]}` : line
+    })
+    .join('\n')
+}
+
 function htmlToMarkdown(html: string): string {
-  return promoteHeadings(normalizeMd(td.turndown(html)))
+  return promoteNumberedSteps(promoteHeadings(normalizeMd(td.turndown(html))))
+}
+
+/**
+ * Word docs put the document's own title as the first line, which importItems
+ * also lifts out to use as the note's title — leaving it duplicated at the top
+ * of the body too. Drop it from the body when the two match.
+ */
+function stripLeadingTitleLine(text: string, title: string): string {
+  const lines = text.split('\n')
+  let i = 0
+  while (i < lines.length && lines[i].trim() === '') i++
+  if (i >= lines.length) return text
+  const clean = lines[i]
+    .replace(/^#+\s*/, '')
+    .replace(/^[-*+]\s+/, '')
+    .replace(/\*\*/g, '')
+    .trim()
+  if (clean.toLowerCase() !== title.trim().toLowerCase()) return text
+  lines.splice(i, 1)
+  while (lines[i] !== undefined && lines[i].trim() === '') lines.splice(i, 1)
+  return lines.join('\n')
 }
 
 export interface ImportItem {
@@ -127,12 +162,13 @@ export async function importItems(
 
       const fallbackTitle = basename(item.name, extname(item.name)).replace(/[-_]+/g, ' ')
       const title = titleFrom(text, fallbackTitle)
+      const cleanedText = stripLeadingTitleLine(text, title)
 
       onProgress?.(item.name, 'Saving')
-      const doc = await createNote(vault, notebookId, folderId, title, text)
+      const doc = await createNote(vault, notebookId, folderId, title, cleanedText)
 
       // attach the original file
-      let body = text
+      let body = cleanedText
       if (item.path) {
         const attachDir = join(vault, notebookId, '_attachments')
         await fs.mkdir(attachDir, { recursive: true })

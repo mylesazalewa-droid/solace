@@ -85,11 +85,19 @@ function toHtml(notes: ExportedNote[], title: string): string {
 <style>
   @page { margin: 22mm 20mm; }
   body { font: 12pt/1.55 Georgia, 'Times New Roman', serif; color: #1a1a1a; max-width: 720px; margin: 0 auto; }
-  h1 { font-size: 20pt; margin: 0 0 4pt; font-family: 'Helvetica Neue', Arial, sans-serif; }
-  h2 { font-size: 14pt; margin: 20pt 0 6pt; font-family: 'Helvetica Neue', Arial, sans-serif; }
-  h3 { font-size: 12pt; margin: 16pt 0 4pt; font-family: 'Helvetica Neue', Arial, sans-serif; }
+  h1 { font-size: 20pt; margin: 0 0 4pt; font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: 800; }
+  h2 { font-size: 14pt; margin: 20pt 0 6pt; font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: 800; }
+  h3 {
+    font-size: 10.5pt; margin: 18pt 0 6pt; font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase;
+    border-top: 0.75pt solid #ddd; padding-top: 8pt;
+  }
+  h3:first-of-type { border-top: 0; padding-top: 0; }
   p { margin: 0 0 9pt; }
+  em { color: #666; }
   ul, ol { margin: 0 0 9pt; padding-left: 20pt; }
+  li { margin-bottom: 3pt; }
+  ol > li::marker { font-weight: 700; color: #2f7d5b; }
   blockquote { margin: 0 0 9pt; padding-left: 12pt; border-left: 2pt solid #ccc; color: #555; }
   code { background: #f2f2f2; padding: 1pt 3pt; border-radius: 3pt; font-size: 10pt; }
   .meta { color: #888; font-size: 9pt; font-family: 'Helvetica Neue', Arial, sans-serif; margin-bottom: 10pt; }

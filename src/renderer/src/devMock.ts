@@ -521,6 +521,13 @@ export function installDevMock(): void {
       reference: `${ref.bookName} ${ref.chapter}${ref.verse ? ':' + ref.verse : ''}`,
       verses: [{ n: ref.verse ?? 1, text: 'For God so loved the world… (dev mock verse text).' }]
     }),
+    attachFilesPick: async () => [],
+    openAttachment: async () => {},
+    attachmentsList: async () => [],
+    attachmentRead: async () => '',
+    attachmentWrite: async () => {},
+    attachmentStateGet: async () => ({}),
+    attachmentStateSet: async () => {},
     scripturePassages: async () => [
       {
         key: '41.006',

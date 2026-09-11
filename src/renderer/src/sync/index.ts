@@ -11,6 +11,7 @@ import {
 import type { Firestore } from 'firebase/firestore'
 import { getFirebase } from './firebase'
 import { runSync } from './engine'
+import { runAttachSync } from './attachEngine'
 import { setSyncHandle } from './handle'
 import { useStore } from '../store'
 import { SHARED } from '../../../shared/appConfig'
@@ -155,6 +156,9 @@ export async function syncNow(reason: 'auto' | 'manual' = 'manual'): Promise<voi
   set({ state: 'syncing', error: undefined })
   try {
     const res = await runSync(db, user.uid, device)
+    await runAttachSync(db, user.uid, device).catch(() => {
+      /* attachment sync is best-effort — never blocks note sync */
+    })
     set({
       state: 'idle',
       lastSync: new Date().toISOString(),

@@ -18,7 +18,9 @@ import type {
   VerseRef,
   VerseText,
   TrashItem,
-  PassageGroup
+  PassageGroup,
+  AttachInfo,
+  AttachState
 } from '../shared/types'
 
 const api = {
@@ -149,6 +151,23 @@ const api = {
     dataUrl: string
   ): Promise<{ markdownPath: string; name: string }> =>
     ipcRenderer.invoke('note:attach', noteId, dataUrl),
+
+  attachFilesPick: (
+    noteId: string
+  ): Promise<{ markdownPath: string; name: string; kind: 'image' | 'audio' | 'file' }[]> =>
+    ipcRenderer.invoke('note:attachFiles', noteId),
+  openAttachment: (attachUrl: string): Promise<void> =>
+    ipcRenderer.invoke('attach:open', attachUrl),
+
+  attachmentsList: (): Promise<AttachInfo[]> => ipcRenderer.invoke('sync:attachments:list'),
+  attachmentRead: (relPath: string): Promise<string> =>
+    ipcRenderer.invoke('sync:attachments:read', relPath),
+  attachmentWrite: (relPath: string, base64: string): Promise<void> =>
+    ipcRenderer.invoke('sync:attachments:write', relPath, base64),
+  attachmentStateGet: (): Promise<AttachState> =>
+    ipcRenderer.invoke('sync:attachments:state:get'),
+  attachmentStateSet: (state: AttachState): Promise<void> =>
+    ipcRenderer.invoke('sync:attachments:state:set', state),
 
   trashList: (): Promise<TrashItem[]> => ipcRenderer.invoke('trash:list'),
   trashRestore: (id: string): Promise<VaultSnapshot> => ipcRenderer.invoke('trash:restore', id),

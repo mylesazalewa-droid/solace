@@ -144,6 +144,21 @@ export interface SyncApply {
 /** path -> what we last reconciled */
 export type SyncState = Record<string, { rev: number; hash: string }>
 
+/** one file under a notebook's `_attachments/`, for attachment sync */
+export interface AttachInfo {
+  path: string
+  notebookId: string
+  hash: string
+  size: number
+  /** ISO mtime — used as the last-write-wins clock (attachments have no frontmatter) */
+  updated: string
+  /** over the size cap — never pushed to the cloud, listed so the UI can say why */
+  oversized: boolean
+}
+
+/** path -> what we last reconciled, for attachment sync (separate from note SyncState) */
+export type AttachState = Record<string, { hash: string; updated: string }>
+
 export interface SyncStatus {
   state: 'off' | 'signed-out' | 'idle' | 'syncing' | 'error'
   email?: string

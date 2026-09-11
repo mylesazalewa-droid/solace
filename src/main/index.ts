@@ -8,7 +8,7 @@ import {
   protocol,
   net
 } from 'electron'
-import { join } from 'path'
+import { join, sep } from 'path'
 import { pathToFileURL } from 'url'
 import { promises as fs, existsSync } from 'fs'
 import { getConfig, setConfig } from './config'
@@ -58,7 +58,14 @@ import {
   type Translation
 } from './scripture'
 import { listTrash, restoreTrash, purgeTrash, emptyTrash } from './trash'
-import { saveAttachment } from './attach'
+import { saveAttachment, attachFiles } from './attach'
+import {
+  listAttachments,
+  readAttachmentBase64,
+  writeAttachmentBase64,
+  readAttachState,
+  writeAttachState
+} from './attachSync'
 import type {
   ExportFormat,
   NoteTemplate,
@@ -184,6 +191,35 @@ function register(): void {
 
   ipcMain.handle('note:attach', async (_e, noteId: string, dataUrl: string) =>
     saveAttachment(await currentVault(), noteId, dataUrl)
+  )
+
+  ipcMain.handle('note:attachFiles', async (_e, noteId: string) => {
+    const res = await dialog.showOpenDialog({
+      title: 'Attach files',
+      properties: ['openFile', 'multiSelections']
+    })
+    if (res.canceled || !res.filePaths.length) return []
+    return attachFiles(await currentVault(), noteId, res.filePaths)
+  })
+
+  ipcMain.handle('attach:open', async (_e, attachUrl: string) => {
+    const vault = await currentVault()
+    const m = attachUrl.match(/^solace-attach:\/\/f\/(.+)$/)
+    const abs = m ? decodeURIComponent(m[1]) : join(vault, attachUrl.split('/').join(sep))
+    if (!abs.startsWith(vault)) throw new Error('Invalid attachment path')
+    await shell.openPath(abs)
+  })
+
+  ipcMain.handle('sync:attachments:list', () => currentVault().then(listAttachments))
+  ipcMain.handle('sync:attachments:read', (_e, relPath: string) =>
+    currentVault().then((v) => readAttachmentBase64(v, relPath))
+  )
+  ipcMain.handle('sync:attachments:write', (_e, relPath: string, base64: string) =>
+    currentVault().then((v) => writeAttachmentBase64(v, relPath, base64))
+  )
+  ipcMain.handle('sync:attachments:state:get', () => currentVault().then(readAttachState))
+  ipcMain.handle('sync:attachments:state:set', (_e, state) =>
+    currentVault().then((v) => writeAttachState(v, state))
   )
 
   ipcMain.handle('note:create', async (_e, args) => {
