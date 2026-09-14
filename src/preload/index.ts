@@ -10,6 +10,7 @@ import type {
   SortProposal,
   NoteTemplate,
   ExportFormat,
+  ExportLink,
   HistoryEntry,
   TaskItem,
   SyncSnapshot,
@@ -113,7 +114,10 @@ const api = {
     noteIds: string[]
     format: ExportFormat
     name: string
+    reuse?: boolean
   }): Promise<{ path: string; count: number } | null> => ipcRenderer.invoke('export:run', args),
+  exportLink: (noteIds: string[], format: ExportFormat): Promise<ExportLink | null> =>
+    ipcRenderer.invoke('export:link', noteIds, format),
 
   historyList: (noteId: string): Promise<HistoryEntry[]> =>
     ipcRenderer.invoke('history:list', noteId),

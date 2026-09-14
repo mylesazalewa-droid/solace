@@ -198,6 +198,12 @@ export interface NoteTemplate {
 
 export type ExportFormat = 'md' | 'pdf' | 'docx' | 'json'
 
+/** a remembered "export to this exact file again" target, keyed by note-set + format */
+export interface ExportLink {
+  path: string
+  exportedAt: string
+}
+
 export interface HistoryEntry {
   id: string
   at: string

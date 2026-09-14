@@ -964,6 +964,18 @@ h3 {
 .ed-read a {
   color: var(--grass-deep);
 }
+.ed-read img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin: 0.4em 0;
+}
+.ed-read audio,
+.ed-read video {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin: 0.6em 0;
+}
 .ed-read code {
   background: var(--raise);
   border: 1px solid var(--line);

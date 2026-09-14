@@ -3312,6 +3312,17 @@ input {
   color: var(--danger);
   margin: 0;
 }
+.export-link-note {
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--raise);
+  border-radius: 8px;
+  padding: 8px 11px;
+  margin: 2px 0 0;
+}
+.export-link-note strong {
+  color: var(--ink);
+}
 
 /* ===== templates manager ===== */
 .tpl-card {

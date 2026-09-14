@@ -4,6 +4,7 @@ import { marked } from 'marked'
 marked.use({ breaks: true, gfm: true })
 import { useStore } from '../store'
 import { saveNote, trashNote, toggleTask, type Note } from '../lib/notes'
+import { attachKind, resolveAttachPath, getAttachmentDataUrl } from '../lib/attachments'
 
 export function NoteScreen({ id }: { id: string }): JSX.Element {
   const notes = useStore((s) => s.notes)
@@ -139,7 +140,13 @@ export function NoteScreen({ id }: { id: string }): JSX.Element {
               placeholder="Write in Markdown…"
             />
           ) : (
-            <ReadBody html={html} body={body} onCheckbox={onCheckbox} />
+            <ReadBody
+              html={html}
+              body={body}
+              notePath={note.path}
+              uid={user?.uid}
+              onCheckbox={onCheckbox}
+            />
           )}
         </div>
       </div>
@@ -150,10 +157,14 @@ export function NoteScreen({ id }: { id: string }): JSX.Element {
 function ReadBody({
   html,
   body,
+  notePath,
+  uid,
   onCheckbox
 }: {
   html: string
   body: string
+  notePath: string
+  uid: string | undefined
   onCheckbox: (line: number, done: boolean) => void
 }): JSX.Element {
   const ref = useRef<HTMLDivElement>(null)
@@ -175,5 +186,54 @@ function ReadBody({
       }
     })
   }, [html, body, onCheckbox])
+
+  // resolve synced attachments (images/audio/files) referenced by relative path —
+  // the desktop app can read them straight off disk, the web app has to pull them
+  // out of Firestore and swap in a data: URL
+  useEffect(() => {
+    const root = ref.current
+    if (!root || !uid) return
+    let live = true
+
+    const patchSrc = (el: HTMLImageElement | HTMLMediaElement, src: string): void => {
+      const path = resolveAttachPath(notePath, src)
+      if (!path) return
+      getAttachmentDataUrl(uid, path).then((url) => {
+        if (live && url) el.src = url
+      })
+    }
+
+    root.querySelectorAll('img[src]').forEach((img) => {
+      const src = img.getAttribute('src')
+      if (src) patchSrc(img as HTMLImageElement, src)
+    })
+    root.querySelectorAll('audio[src], video[src]').forEach((el) => {
+      const src = el.getAttribute('src')
+      if (src) patchSrc(el as HTMLMediaElement, src)
+    })
+    root.querySelectorAll('a[href]').forEach((a) => {
+      const href = a.getAttribute('href')
+      if (!href) return
+      const path = resolveAttachPath(notePath, href)
+      if (!path) return
+      const kind = attachKind(path)
+      const label = a.textContent ?? ''
+      getAttachmentDataUrl(uid, path).then((url) => {
+        if (!live || !url) return
+        const link = a as HTMLAnchorElement
+        link.href = url
+        link.target = '_blank'
+        link.rel = 'noopener'
+        if (kind === 'file' && !url.startsWith('data:application/pdf')) {
+          link.setAttribute('download', label.replace(/^📎\s*/, '') || path.split('/').pop() || 'file')
+        }
+      })
+    })
+
+    return () => {
+      live = false
+    }
+  }, [html, notePath, uid])
+
   return <div ref={ref} className="ed-read" dangerouslySetInnerHTML={{ __html: html }} />
 }

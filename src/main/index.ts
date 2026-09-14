@@ -33,7 +33,7 @@ import {
 import { helperStatus, tidyUp, summarize, suggestTags } from './helper'
 import { importItems, proposeSort, type ImportItem } from './importer'
 import { listTemplates, saveTemplate, deleteTemplate } from './templates'
-import { exportNotes } from './export'
+import { exportNotes, getExportLink } from './export'
 import { setupQuickCapture, applyHotkey } from './quickcapture'
 import { maybeSnapshot, listHistory, readHistory, restoreHistory } from './history'
 import { openDaily, readDaily } from './daily'
@@ -462,9 +462,15 @@ function register(): void {
 
   ipcMain.handle(
     'export:run',
-    async (_e, args: { noteIds: string[]; format: ExportFormat; name: string }) => {
-      return exportNotes(args.noteIds, args.format, args.name)
+    async (
+      _e,
+      args: { noteIds: string[]; format: ExportFormat; name: string; reuse?: boolean }
+    ) => {
+      return exportNotes(args.noteIds, args.format, args.name, args.reuse)
     }
+  )
+  ipcMain.handle('export:link', (_e, noteIds: string[], format: ExportFormat) =>
+    getExportLink(noteIds, format)
   )
 
   ipcMain.handle('vault:reveal', async (_e, noteId?: string) => {

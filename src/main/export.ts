@@ -1,10 +1,11 @@
 import { BrowserWindow, dialog } from 'electron'
 import { promises as fs } from 'fs'
+import { join } from 'path'
 import { marked } from 'marked'
 
 marked.use({ breaks: true, gfm: true })
 import htmlToDocx from 'html-to-docx'
-import type { ExportFormat } from '../shared/types'
+import type { ExportFormat, ExportLink } from '../shared/types'
 import { readNoteById } from './vault'
 import { getConfig } from './config'
 
@@ -128,20 +129,66 @@ async function renderPdf(html: string): Promise<Buffer> {
 
 const EXT: Record<ExportFormat, string> = { md: 'md', pdf: 'pdf', docx: 'docx', json: 'json' }
 
+// ---------- "export to this same file again" links ----------
+// Keyed by the note-set + format so re-exporting the same note(s) in the same
+// format can skip the save dialog and just overwrite the file picked last time.
+
+function linkKey(noteIds: string[], format: ExportFormat): string {
+  return `${format}:${[...noteIds].sort().join('|')}`
+}
+
+function linksFile(vault: string): string {
+  return join(vault, '.solace', 'exports.json')
+}
+
+async function readLinks(vault: string): Promise<Record<string, ExportLink>> {
+  try {
+    return JSON.parse(await fs.readFile(linksFile(vault), 'utf8')) as Record<string, ExportLink>
+  } catch {
+    return {}
+  }
+}
+
+async function writeLinks(vault: string, links: Record<string, ExportLink>): Promise<void> {
+  await fs.mkdir(join(vault, '.solace'), { recursive: true })
+  await fs.writeFile(linksFile(vault), JSON.stringify(links, null, 2), 'utf8')
+}
+
+export async function getExportLink(
+  noteIds: string[],
+  format: ExportFormat
+): Promise<ExportLink | null> {
+  const vault = (await getConfig()).vaultPath
+  if (!vault) return null
+  return (await readLinks(vault))[linkKey(noteIds, format)] ?? null
+}
+
 export async function exportNotes(
   noteIds: string[],
   format: ExportFormat,
-  suggestedName: string
+  suggestedName: string,
+  reuseLink = false
 ): Promise<{ path: string; count: number } | null> {
   if (!noteIds.length) return null
+  const vault = (await getConfig()).vaultPath
+  if (!vault) throw new Error('No vault')
   const notes = await collect(noteIds)
+  const key = linkKey(noteIds, format)
 
-  const res = await dialog.showSaveDialog({
-    title: 'Export notes',
-    defaultPath: `${suggestedName.replace(/[/\\:*?"<>|]/g, '')}.${EXT[format]}`,
-    filters: [{ name: format.toUpperCase(), extensions: [EXT[format]] }]
-  })
-  if (res.canceled || !res.filePath) return null
+  let filePath: string
+  if (reuseLink) {
+    const link = (await readLinks(vault))[key]
+    if (!link) throw new Error('No previous export to reuse — export as a new file first.')
+    filePath = link.path
+  } else {
+    const res = await dialog.showSaveDialog({
+      title: 'Export notes',
+      defaultPath: `${suggestedName.replace(/[/\\:*?"<>|]/g, '')}.${EXT[format]}`,
+      filters: [{ name: format.toUpperCase(), extensions: [EXT[format]] }]
+    })
+    if (res.canceled || !res.filePath) return null
+    filePath = res.filePath
+  }
 
   let data: Buffer | string
   if (format === 'md') {
@@ -157,6 +204,10 @@ export async function exportNotes(
     data = buf as Buffer
   }
 
-  await fs.writeFile(res.filePath, data)
-  return { path: res.filePath, count: notes.length }
+  await fs.writeFile(filePath, data)
+  const links = await readLinks(vault)
+  links[key] = { path: filePath, exportedAt: new Date().toISOString() }
+  await writeLinks(vault, links)
+
+  return { path: filePath, count: notes.length }
 }

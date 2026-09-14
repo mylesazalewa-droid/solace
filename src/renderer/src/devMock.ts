@@ -154,6 +154,7 @@ let config: AppConfig = {
 }
 
 let nbOrder: string[] = []
+const exportLinks = new Map<string, { path: string; exportedAt: string }>()
 
 function snapshot(): VaultSnapshot {
   notes.forEach((n) => knownNotebooks.add(n.notebookId))
@@ -407,10 +408,20 @@ export function installDevMock(): void {
     ],
     saveTemplate: async () => (window as unknown as { solace: typeof api }).solace.listTemplates(),
     deleteTemplate: async () => (window as unknown as { solace: typeof api }).solace.listTemplates(),
-    exportNotes: async (args: { noteIds: string[]; format: string; name: string }) => ({
-      path: `/Users/you/Desktop/${args.name}.${args.format}`,
-      count: args.noteIds.length
-    }),
+    exportNotes: async (args: {
+      noteIds: string[]
+      format: string
+      name: string
+      reuse?: boolean
+    }) => {
+      const key = `${args.format}:${[...args.noteIds].sort().join('|')}`
+      const existing = exportLinks.get(key)
+      const path = args.reuse && existing ? existing.path : `/Users/you/Desktop/${args.name}.${args.format}`
+      exportLinks.set(key, { path, exportedAt: new Date().toISOString() })
+      return { path, count: args.noteIds.length }
+    },
+    exportLink: async (noteIds: string[], format: string) =>
+      exportLinks.get(`${format}:${[...noteIds].sort().join('|')}`) ?? null,
     saveCapture: async (text: string) => {
       const now = new Date().toISOString()
       const first = text.trim().split('\n')[0].slice(0, 80)
