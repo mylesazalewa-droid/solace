@@ -478,6 +478,12 @@ function register(): void {
     shell.showItemInFolder(noteId ? join(vault, noteId.split('/').join('/')) : vault)
   })
 
+  // reveal an arbitrary absolute path (e.g. wherever the user just saved an export) —
+  // distinct from vault:reveal, which resolves noteIds relative to the vault
+  ipcMain.handle('reveal:path', (_e, absPath: string) => {
+    if (absPath) shell.showItemInFolder(absPath)
+  })
+
   ipcMain.handle('open:url', async (_e, url: string) => {
     if (/^https?:\/\//.test(url)) await shell.openExternal(url)
   })

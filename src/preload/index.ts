@@ -75,6 +75,7 @@ const api = {
   ): Promise<{ snapshot: VaultSnapshot; newId: string }> =>
     ipcRenderer.invoke('note:move', noteId, toNotebook, toFolder),
   reveal: (noteId?: string): Promise<void> => ipcRenderer.invoke('vault:reveal', noteId),
+  revealPath: (absPath: string): Promise<void> => ipcRenderer.invoke('reveal:path', absPath),
   openUrl: (url: string): Promise<void> => ipcRenderer.invoke('open:url', url),
 
   helperStatus: (): Promise<HelperStatus> => ipcRenderer.invoke('helper:status'),

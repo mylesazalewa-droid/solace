@@ -303,6 +303,7 @@ export function installDevMock(): void {
         })
     },
     reveal: async () => {},
+    revealPath: async () => {},
     openUrl: async (url: string) => {
       window.open(url, '_blank')
     },

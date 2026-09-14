@@ -82,7 +82,7 @@ export function ExportDialog(): JSX.Element | null {
               <span style={{ color: 'var(--ink)' }}>{done.split('/').pop()}</span>.
             </p>
             <div className="prompt-actions">
-              <button className="btn subtle" onClick={() => window.solace.reveal()}>
+              <button className="btn subtle" onClick={() => window.solace.revealPath(done)}>
                 Show in Finder
               </button>
               <button className="btn accent" onClick={close}>
