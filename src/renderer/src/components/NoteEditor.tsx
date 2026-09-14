@@ -48,6 +48,10 @@ export function NoteEditor(): JSX.Element {
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const dirtySinceOpen = useRef(false)
   const lastSummarizedLen = useRef(0)
+  // set once the user types into the summary box by hand — until the next explicit
+  // regenerate (or a different note loads), nothing auto-written by the helper is
+  // allowed to overwrite it
+  const summaryEditedByUser = useRef(false)
 
   const noteId = route.name === 'note' ? route.noteId : null
   const backTo = route.name === 'note' ? route.backTo : { name: 'shelf' as const }
@@ -305,6 +309,7 @@ export function NoteEditor(): JSX.Element {
   useEffect(() => {
     if (!noteId) return
     dirtySinceOpen.current = false
+    summaryEditedByUser.current = false
     window.solace.readNote(noteId).then((d) => {
       setDoc(d)
       setTitle(d.title)
@@ -339,6 +344,7 @@ export function NoteEditor(): JSX.Element {
   const updateSummary = useCallback(
     (text: string) => {
       setSummary(text)
+      summaryEditedByUser.current = true
       if (summaryTimer.current) clearTimeout(summaryTimer.current)
       summaryTimer.current = setTimeout(() => {
         window.solace.saveNote(noteId ?? '', { summary: text }).then(() => refresh())
@@ -359,6 +365,7 @@ export function NoteEditor(): JSX.Element {
       setSummary(fresh.summary)
       setDoc(fresh)
       lastSummarizedLen.current = fresh.body.length
+      summaryEditedByUser.current = false
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'The helper couldn’t write a summary.')
     } finally {
@@ -384,7 +391,7 @@ export function NoteEditor(): JSX.Element {
   // background auto-summary: a few seconds after you stop typing, if enabled and
   // the note has grown enough that its summary is stale (or missing).
   useEffect(() => {
-    if (!noteId || !config?.autoSummary || summaryBusy) return
+    if (!noteId || !config?.autoSummary || summaryBusy || summaryEditedByUser.current) return
     const len = body.trim().length
     const grew = len - lastSummarizedLen.current
     const needs = (!summary && len > 140) || grew > 220
@@ -413,12 +420,14 @@ export function NoteEditor(): JSX.Element {
 
   const goBack = async (): Promise<void> => {
     if (!saved) await flush()
-    // auto-summary/tags after a real edit, if the helper is set up for it
+    // auto-summary/tags after a real edit, if the helper is set up for it — but never
+    // if the user hand-edited the summary this session, or this silently overwrites it
     if (
       noteId &&
       dirtySinceOpen.current &&
       config?.autoSummary &&
-      body.trim().length > 40
+      body.trim().length > 40 &&
+      !summaryEditedByUser.current
     ) {
       window.solace.enrichNote(noteId).then((snap) => useStore.setState({ snapshot: snap })).catch(() => {})
     }
@@ -479,6 +488,9 @@ export function NoteEditor(): JSX.Element {
       const fresh = await window.solace.readNote(noteId)
       setDoc(fresh)
       setTags(fresh.tags)
+      setSummary(fresh.summary)
+      lastSummarizedLen.current = fresh.body.length
+      summaryEditedByUser.current = false
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'The helper failed.')
     } finally {

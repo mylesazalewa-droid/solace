@@ -464,9 +464,15 @@ function register(): void {
     'export:run',
     async (
       _e,
-      args: { noteIds: string[]; format: ExportFormat; name: string; reuse?: boolean }
+      args: {
+        noteIds: string[]
+        format: ExportFormat
+        name: string
+        reuse?: boolean
+        watermark?: boolean
+      }
     ) => {
-      return exportNotes(args.noteIds, args.format, args.name, args.reuse)
+      return exportNotes(args.noteIds, args.format, args.name, args.reuse, args.watermark)
     }
   )
   ipcMain.handle('export:link', (_e, noteIds: string[], format: ExportFormat) =>

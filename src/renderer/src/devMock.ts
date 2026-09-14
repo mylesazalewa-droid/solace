@@ -150,7 +150,8 @@ let config: AppConfig = {
   quickCaptureHotkey: 'CommandOrControl+Shift+Space',
   firebaseConfig: '',
   syncEnabled: true,
-  bibleTranslation: 'kjv'
+  bibleTranslation: 'kjv',
+  exportWatermark: true
 }
 
 let nbOrder: string[] = []

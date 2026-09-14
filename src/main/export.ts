@@ -50,8 +50,11 @@ function cleanBody(md: string): string {
     .trim()
 }
 
-function toMarkdown(notes: ExportedNote[]): string {
-  return notes
+const DOWNLOAD_URL = 'https://github.com/mylesazalewa-droid/solace/releases/latest'
+const WATERMARK_TEXT = 'Made with Solace — a calm notes app by Myles Zalewa.'
+
+function toMarkdown(notes: ExportedNote[], watermark: boolean): string {
+  const body = notes
     .map((n) => {
       const front = [
         `# ${n.title}`,
@@ -63,9 +66,11 @@ function toMarkdown(notes: ExportedNote[]): string {
       return `${front}\n\n${cleanBody(n.body)}`
     })
     .join('\n\n\n---\n\n\n')
+  if (!watermark) return body
+  return `${body}\n\n---\n\n*${WATERMARK_TEXT} [Get the app](${DOWNLOAD_URL})*`
 }
 
-function toHtml(notes: ExportedNote[], title: string): string {
+function toHtml(notes: ExportedNote[], title: string, watermark: boolean): string {
   const body = notes
     .map((n, i) => {
       const meta = [
@@ -82,6 +87,9 @@ function toHtml(notes: ExportedNote[], title: string): string {
         ${marked.parse(cleanBody(n.body)) as string}`
     })
     .join('\n')
+  const footer = watermark
+    ? `<div class="watermark"><p>${WATERMARK_TEXT} <a href="${DOWNLOAD_URL}">Get the app →</a></p></div>`
+    : ''
   return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
 <style>
   @page { margin: 22mm 20mm; }
@@ -104,7 +112,10 @@ function toHtml(notes: ExportedNote[], title: string): string {
   .meta { color: #888; font-size: 9pt; font-family: 'Helvetica Neue', Arial, sans-serif; margin-bottom: 10pt; }
   .summary { color: #555; font-style: italic; border-left: 2pt solid #ddd; padding-left: 10pt; }
   .pb { page-break-before: always; }
-</style></head><body>${body}</body></html>`
+  .watermark { margin-top: 28pt; padding-top: 10pt; border-top: 0.75pt solid #ddd; }
+  .watermark p { margin: 0; font-size: 8.5pt; color: #999; font-family: 'Helvetica Neue', Arial, sans-serif; }
+  .watermark a { color: #2f7d5b; text-decoration: none; }
+</style></head><body>${body}${footer}</body></html>`
 }
 
 function escapeHtml(s: string): string {
@@ -167,7 +178,8 @@ export async function exportNotes(
   noteIds: string[],
   format: ExportFormat,
   suggestedName: string,
-  reuseLink = false
+  reuseLink = false,
+  watermark = false
 ): Promise<{ path: string; count: number } | null> {
   if (!noteIds.length) return null
   const vault = (await getConfig()).vaultPath
@@ -192,13 +204,13 @@ export async function exportNotes(
 
   let data: Buffer | string
   if (format === 'md') {
-    data = toMarkdown(notes)
+    data = toMarkdown(notes, watermark)
   } else if (format === 'json') {
     data = JSON.stringify({ exported: new Date().toISOString(), notes }, null, 2)
   } else if (format === 'pdf') {
-    data = await renderPdf(toHtml(notes, suggestedName))
+    data = await renderPdf(toHtml(notes, suggestedName, watermark))
   } else {
-    const buf = await htmlToDocx(toHtml(notes, suggestedName), undefined, {
+    const buf = await htmlToDocx(toHtml(notes, suggestedName, watermark), undefined, {
       margins: { top: 1440, right: 1200, bottom: 1440, left: 1200 }
     })
     data = buf as Buffer

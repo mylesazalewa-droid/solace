@@ -21,9 +21,11 @@ function fmtWhen(iso: string): string {
 
 export function ExportDialog(): JSX.Element | null {
   const target = useStore((s) => s.exportTarget)
+  const config = useStore((s) => s.config)
   const close = (): void => useStore.setState({ exportTarget: null })
   const [format, setFormat] = useState<ExportFormat>('pdf')
   const [link, setLink] = useState<ExportLink | null>(null)
+  const [watermark, setWatermark] = useState(true)
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +36,14 @@ export function ExportDialog(): JSX.Element | null {
     setDone(null)
     setError(null)
     setFormat('pdf')
+    setWatermark(config?.exportWatermark ?? true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target])
+
+  const toggleWatermark = (v: boolean): void => {
+    setWatermark(v)
+    window.solace.setConfig({ exportWatermark: v }).catch(() => {})
+  }
 
   useEffect(() => {
     if (!target) return
@@ -55,7 +64,8 @@ export function ExportDialog(): JSX.Element | null {
         noteIds: target.noteIds,
         format,
         name: target.name,
-        reuse
+        reuse,
+        watermark
       })
       if (res) setDone(res.path)
       else close()
@@ -108,6 +118,18 @@ export function ExportDialog(): JSX.Element | null {
                 </button>
               ))}
             </div>
+            {format !== 'json' && (
+              <label className="export-watermark-row">
+                <input
+                  type="checkbox"
+                  checked={watermark}
+                  onChange={(e) => toggleWatermark(e.target.checked)}
+                />
+                <span>
+                  Add a small “Made with Solace” footer + download link
+                </span>
+              </label>
+            )}
             {link && (
               <p className="export-link-note">
                 Last exported to <strong>{link.path.split('/').pop()}</strong> · {fmtWhen(link.exportedAt)}

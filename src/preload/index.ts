@@ -116,6 +116,7 @@ const api = {
     format: ExportFormat
     name: string
     reuse?: boolean
+    watermark?: boolean
   }): Promise<{ path: string; count: number } | null> => ipcRenderer.invoke('export:run', args),
   exportLink: (noteIds: string[], format: ExportFormat): Promise<ExportLink | null> =>
     ipcRenderer.invoke('export:link', noteIds, format),

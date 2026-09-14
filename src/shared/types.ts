@@ -81,6 +81,8 @@ export interface AppConfig {
   syncEnabled: boolean
   /** which bundled public-domain Bible to show on hover */
   bibleTranslation: 'kjv' | 'bbe'
+  /** append a small "made with Solace" footer + download link to exports */
+  exportWatermark: boolean
 }
 
 export interface VerseRef {
