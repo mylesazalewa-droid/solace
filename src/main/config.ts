@@ -11,6 +11,7 @@ const DEFAULTS: AppConfig = {
   engine: 'local',
   ollamaUrl: 'http://localhost:11434',
   ollamaModel: 'llama3.2',
+  ollamaEmbedModel: 'nomic-embed-text',
   geminiKey: '',
   geminiModel: 'gemini-2.0-flash',
   autoSummary: true,
@@ -19,7 +20,9 @@ const DEFAULTS: AppConfig = {
   firebaseConfig: '',
   syncEnabled: true,
   bibleTranslation: 'kjv',
-  exportWatermark: true
+  exportWatermark: true,
+  exportTags: true,
+  exportSummary: true
 }
 
 let cache: AppConfig | null = null

@@ -1,11 +1,13 @@
 // Shared between main and renderer.
 
-export type CoverStyle = 'arcs' | 'stripe' | 'dots' | 'wash' | 'chev' | 'grid'
+export type CoverStyle = 'arcs' | 'stripe' | 'dots' | 'wash' | 'chev' | 'grid' | 'image'
 
 export interface CoverSpec {
   style: CoverStyle
   c1: string
   c2: string
+  /** vault-relative path to a custom cover photo — only set when style is 'image' */
+  image?: string
 }
 
 export interface NotebookMeta {
@@ -68,6 +70,8 @@ export interface AppConfig {
   engine: HelperEngine
   ollamaUrl: string
   ollamaModel: string
+  /** local embedding model, for "ask your notes" semantic search */
+  ollamaEmbedModel: string
   geminiKey: string
   geminiModel: string
   autoSummary: boolean
@@ -83,6 +87,10 @@ export interface AppConfig {
   bibleTranslation: 'kjv' | 'bbe'
   /** append a small "made with Solace" footer + download link to exports */
   exportWatermark: boolean
+  /** include each note's tags in an export */
+  exportTags: boolean
+  /** include each note's one-line summary in an export */
+  exportSummary: boolean
 }
 
 export interface VerseRef {
@@ -108,6 +116,24 @@ export interface PassageGroup {
   label: string
   count: number
   notes: { id: string; title: string; notebookId: string; ref: string }[]
+}
+
+/** how much of the vault has an up-to-date embedding for semantic search */
+export interface IndexStatus {
+  indexed: number
+  total: number
+}
+
+export interface AskSource {
+  noteId: string
+  title: string
+  notebookId: string
+  score: number
+}
+
+export interface AskAnswer {
+  answer: string
+  sources: AskSource[]
 }
 
 /** one note, flattened for the sync layer (main ⇄ renderer) */

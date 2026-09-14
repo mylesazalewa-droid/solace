@@ -158,6 +158,18 @@ export function Settings({ onClose }: { onClose: () => void }): JSX.Element {
                     onBlur={() => patch({ ollamaUrl: draft.ollamaUrl.trim() })}
                   />
                 </label>
+                <label className="field">
+                  <span>Embedding model (for “Ask your notes”)</span>
+                  <input
+                    value={draft.ollamaEmbedModel}
+                    onChange={(e) => setDraft({ ...draft, ollamaEmbedModel: e.target.value })}
+                    onBlur={() => patch({ ollamaEmbedModel: draft.ollamaEmbedModel.trim() })}
+                    placeholder="nomic-embed-text"
+                  />
+                </label>
+                <p className="sec-note">
+                  Needs its own pull: <code>ollama pull {draft.ollamaEmbedModel}</code>
+                </p>
               </>
             ) : (
               <>

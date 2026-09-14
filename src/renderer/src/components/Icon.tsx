@@ -31,6 +31,7 @@ export type IconName =
   | 'history'
   | 'logo'
   | 'globe'
+  | 'message'
 
 const P: Record<IconName, JSX.Element> = {
   stack: (
@@ -163,6 +164,12 @@ const P: Record<IconName, JSX.Element> = {
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18" />
       <path d="M12 3c2.8 2.5 4.2 5.7 4.2 9s-1.4 6.5-4.2 9c-2.8-2.5-4.2-5.7-4.2-9S9.2 5.5 12 3Z" />
+    </>
+  ),
+  message: (
+    <>
+      <path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
+      <path d="M7.5 9.5h9M7.5 13h6" />
     </>
   )
 }

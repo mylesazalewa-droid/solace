@@ -53,28 +53,36 @@ function cleanBody(md: string): string {
 const DOWNLOAD_URL = 'https://github.com/mylesazalewa-droid/solace/releases/latest'
 const WATERMARK_TEXT = 'Made with Solace — a calm notes app by Myles Zalewa.'
 
-function toMarkdown(notes: ExportedNote[], watermark: boolean): string {
+export interface ExportOptions {
+  watermark: boolean
+  includeTags: boolean
+  includeSummary: boolean
+}
+
+const DEFAULT_OPTIONS: ExportOptions = { watermark: false, includeTags: true, includeSummary: true }
+
+function toMarkdown(notes: ExportedNote[], opts: ExportOptions): string {
   const body = notes
     .map((n) => {
       const front = [
         `# ${n.title}`,
-        n.tags.length ? `*${n.tags.map((t) => `#${t}`).join('  ')}*` : '',
-        n.summary ? `> ${n.summary}` : ''
+        opts.includeTags && n.tags.length ? `*${n.tags.map((t) => `#${t}`).join('  ')}*` : '',
+        opts.includeSummary && n.summary ? `> ${n.summary}` : ''
       ]
         .filter(Boolean)
         .join('\n\n')
       return `${front}\n\n${cleanBody(n.body)}`
     })
     .join('\n\n\n---\n\n\n')
-  if (!watermark) return body
+  if (!opts.watermark) return body
   return `${body}\n\n---\n\n*${WATERMARK_TEXT} [Get the app](${DOWNLOAD_URL})*`
 }
 
-function toHtml(notes: ExportedNote[], title: string, watermark: boolean): string {
+function toHtml(notes: ExportedNote[], title: string, opts: ExportOptions): string {
   const body = notes
     .map((n, i) => {
       const meta = [
-        n.tags.length ? n.tags.map((t) => `#${t}`).join(' ') : '',
+        opts.includeTags && n.tags.length ? n.tags.map((t) => `#${t}`).join(' ') : '',
         new Date(n.updated).toLocaleDateString()
       ]
         .filter(Boolean)
@@ -83,11 +91,11 @@ function toHtml(notes: ExportedNote[], title: string, watermark: boolean): strin
         ${i > 0 ? '<div class="pb"></div>' : ''}
         <h1>${escapeHtml(n.title)}</h1>
         <p class="meta">${meta}</p>
-        ${n.summary ? `<p class="summary">${escapeHtml(n.summary)}</p>` : ''}
+        ${opts.includeSummary && n.summary ? `<p class="summary">${escapeHtml(n.summary)}</p>` : ''}
         ${marked.parse(cleanBody(n.body)) as string}`
     })
     .join('\n')
-  const footer = watermark
+  const footer = opts.watermark
     ? `<div class="watermark"><p>${WATERMARK_TEXT} <a href="${DOWNLOAD_URL}">Get the app →</a></p></div>`
     : ''
   return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
@@ -179,9 +187,10 @@ export async function exportNotes(
   format: ExportFormat,
   suggestedName: string,
   reuseLink = false,
-  watermark = false
+  options: Partial<ExportOptions> = {}
 ): Promise<{ path: string; count: number } | null> {
   if (!noteIds.length) return null
+  const opts: ExportOptions = { ...DEFAULT_OPTIONS, ...options }
   const vault = (await getConfig()).vaultPath
   if (!vault) throw new Error('No vault')
   const notes = await collect(noteIds)
@@ -204,13 +213,21 @@ export async function exportNotes(
 
   let data: Buffer | string
   if (format === 'md') {
-    data = toMarkdown(notes, watermark)
+    data = toMarkdown(notes, opts)
   } else if (format === 'json') {
-    data = JSON.stringify({ exported: new Date().toISOString(), notes }, null, 2)
+    const jsonNotes = notes.map((n) => {
+      const { tags: _tags, summary: _summary, ...rest } = n
+      return {
+        ...rest,
+        ...(opts.includeTags ? { tags: n.tags } : {}),
+        ...(opts.includeSummary ? { summary: n.summary } : {})
+      }
+    })
+    data = JSON.stringify({ exported: new Date().toISOString(), notes: jsonNotes }, null, 2)
   } else if (format === 'pdf') {
-    data = await renderPdf(toHtml(notes, suggestedName, watermark))
+    data = await renderPdf(toHtml(notes, suggestedName, opts))
   } else {
-    const buf = await htmlToDocx(toHtml(notes, suggestedName, watermark), undefined, {
+    const buf = await htmlToDocx(toHtml(notes, suggestedName, opts), undefined, {
       margins: { top: 1440, right: 1200, bottom: 1440, left: 1200 }
     })
     data = buf as Buffer

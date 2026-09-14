@@ -26,6 +26,8 @@ export function ExportDialog(): JSX.Element | null {
   const [format, setFormat] = useState<ExportFormat>('pdf')
   const [link, setLink] = useState<ExportLink | null>(null)
   const [watermark, setWatermark] = useState(true)
+  const [includeTags, setIncludeTags] = useState(true)
+  const [includeSummary, setIncludeSummary] = useState(true)
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -37,12 +39,22 @@ export function ExportDialog(): JSX.Element | null {
     setError(null)
     setFormat('pdf')
     setWatermark(config?.exportWatermark ?? true)
+    setIncludeTags(config?.exportTags ?? true)
+    setIncludeSummary(config?.exportSummary ?? true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target])
 
   const toggleWatermark = (v: boolean): void => {
     setWatermark(v)
     window.solace.setConfig({ exportWatermark: v }).catch(() => {})
+  }
+  const toggleTags = (v: boolean): void => {
+    setIncludeTags(v)
+    window.solace.setConfig({ exportTags: v }).catch(() => {})
+  }
+  const toggleSummary = (v: boolean): void => {
+    setIncludeSummary(v)
+    window.solace.setConfig({ exportSummary: v }).catch(() => {})
   }
 
   useEffect(() => {
@@ -65,7 +77,9 @@ export function ExportDialog(): JSX.Element | null {
         format,
         name: target.name,
         reuse,
-        watermark
+        watermark,
+        includeTags,
+        includeSummary
       })
       if (res) setDone(res.path)
       else close()
@@ -118,18 +132,34 @@ export function ExportDialog(): JSX.Element | null {
                 </button>
               ))}
             </div>
-            {format !== 'json' && (
+            <div className="export-toggles">
               <label className="export-watermark-row">
                 <input
                   type="checkbox"
-                  checked={watermark}
-                  onChange={(e) => toggleWatermark(e.target.checked)}
+                  checked={includeSummary}
+                  onChange={(e) => toggleSummary(e.target.checked)}
                 />
-                <span>
-                  Add a small “Made with Solace” footer + download link
-                </span>
+                <span>Include the one-line summary</span>
               </label>
-            )}
+              <label className="export-watermark-row">
+                <input
+                  type="checkbox"
+                  checked={includeTags}
+                  onChange={(e) => toggleTags(e.target.checked)}
+                />
+                <span>Include tags</span>
+              </label>
+              {format !== 'json' && (
+                <label className="export-watermark-row">
+                  <input
+                    type="checkbox"
+                    checked={watermark}
+                    onChange={(e) => toggleWatermark(e.target.checked)}
+                  />
+                  <span>Add a small “Made with Solace” footer + download link</span>
+                </label>
+              )}
+            </div>
             {link && (
               <p className="export-link-note">
                 Last exported to <strong>{link.path.split('/').pop()}</strong> · {fmtWhen(link.exportedAt)}

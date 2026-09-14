@@ -2,7 +2,7 @@ import { useStore } from '../store'
 import { Icon } from './Icon'
 import type { IconName } from './Icon'
 
-type Key = 'library' | 'calendar' | 'agenda' | 'passages' | 'published' | 'search'
+type Key = 'library' | 'calendar' | 'agenda' | 'passages' | 'published' | 'ask' | 'search'
 
 const ITEMS: { key: Key; icon: IconName; label: string }[] = [
   { key: 'library', icon: 'book', label: 'Library' },
@@ -10,6 +10,7 @@ const ITEMS: { key: Key; icon: IconName; label: string }[] = [
   { key: 'agenda', icon: 'checklist', label: 'To-dos' },
   { key: 'passages', icon: 'book', label: 'Passages' },
   { key: 'published', icon: 'globe', label: 'Published' },
+  { key: 'ask', icon: 'message', label: 'Ask' },
   { key: 'search', icon: 'search', label: 'Search' }
 ]
 
@@ -23,6 +24,7 @@ export function Rail({ active }: { active: Key }): JSX.Element {
     else if (k === 'agenda') go({ name: 'agenda' })
     else if (k === 'passages') go({ name: 'passages' })
     else if (k === 'published') go({ name: 'published' })
+    else if (k === 'ask') go({ name: 'ask' })
     else go({ name: 'search', scope: 'all', query: '' })
   }
 

@@ -56,6 +56,14 @@ export function CoverPicker(): JSX.Element | null {
     useStore.setState({ snapshot: snap })
   }
 
+  const uploadPhoto = async (): Promise<void> => {
+    const snap = await window.solace.pickCoverImage(notebookId)
+    if (!snap) return
+    useStore.setState({ snapshot: snap })
+    const fresh = snap.notebooks.find((n) => n.id === notebookId)
+    if (fresh) setSpec(fresh.cover)
+  }
+
   return (
     <div className="prompt-scrim" onMouseDown={(e) => e.target === e.currentTarget && close()}>
       <div className="cover-picker" role="dialog" aria-modal="true" aria-label="Change cover">
@@ -69,6 +77,9 @@ export function CoverPicker(): JSX.Element | null {
         <div className="cp-body">
           <div className="cp-preview">
             <Cover cover={spec} />
+            <button className="btn subtle sm cp-upload" onClick={uploadPhoto}>
+              {spec.style === 'image' ? 'Choose a different photo…' : 'Upload your own photo…'}
+            </button>
           </div>
 
           <div className="cp-controls">
@@ -86,18 +97,22 @@ export function CoverPicker(): JSX.Element | null {
               ))}
             </div>
 
-            <div className="sec-label">Colour</div>
-            <div className="cp-colors">
-              {COLORS.map((c) => (
-                <button
-                  key={c.c1}
-                  className={`cp-color ${spec.c1 === c.c1 ? 'on' : ''}`}
-                  style={{ background: c.c1 }}
-                  onClick={() => apply({ ...spec, c1: c.c1, c2: c.c2 })}
-                  aria-label={c.c1}
-                />
-              ))}
-            </div>
+            {spec.style !== 'image' && (
+              <>
+                <div className="sec-label">Colour</div>
+                <div className="cp-colors">
+                  {COLORS.map((c) => (
+                    <button
+                      key={c.c1}
+                      className={`cp-color ${spec.c1 === c.c1 ? 'on' : ''}`}
+                      style={{ background: c.c1 }}
+                      onClick={() => apply({ ...spec, c1: c.c1, c2: c.c2 })}
+                      aria-label={c.c1}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

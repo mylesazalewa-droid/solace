@@ -31,6 +31,7 @@ import {
   seedVault
 } from './vault'
 import { helperStatus, tidyUp, summarize, suggestTags } from './helper'
+import { buildIndex, indexStatus, askNotes } from './embeddings'
 import { importItems, proposeSort, type ImportItem } from './importer'
 import { listTemplates, saveTemplate, deleteTemplate } from './templates'
 import { exportNotes, getExportLink } from './export'
@@ -58,7 +59,7 @@ import {
   type Translation
 } from './scripture'
 import { listTrash, restoreTrash, purgeTrash, emptyTrash } from './trash'
-import { saveAttachment, attachFiles } from './attach'
+import { saveAttachment, attachFiles, saveCoverImage } from './attach'
 import {
   listAttachments,
   readAttachmentBase64,
@@ -257,6 +258,19 @@ function register(): void {
     return scanVault(vault)
   })
 
+  ipcMain.handle('notebook:pickCoverImage', async (_e, notebookId: string) => {
+    const res = await dialog.showOpenDialog({
+      title: 'Choose a cover photo',
+      properties: ['openFile'],
+      filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }]
+    })
+    if (res.canceled || !res.filePaths[0]) return null
+    const vault = await currentVault()
+    const image = await saveCoverImage(vault, notebookId, res.filePaths[0])
+    await setNotebookCover(vault, notebookId, { style: 'image', c1: '', c2: '', image })
+    return scanVault(vault)
+  })
+
   ipcMain.handle('notebook:reorder', async (_e, ids: string[]) => {
     const vault = await currentVault()
     await setNotebookOrder(vault, ids)
@@ -322,6 +336,22 @@ function register(): void {
     const summary = await summarize(cfg, doc.title, doc.body)
     await saveNote(vault, noteId, { summary })
     return scanVault(vault)
+  })
+
+  // ---- ask your notes (semantic search) ----
+
+  ipcMain.handle('embed:status', async () => indexStatus(await currentVault()))
+
+  ipcMain.handle('embed:build', async (e) => {
+    const vault = await currentVault()
+    const cfg = await getConfig()
+    return buildIndex(vault, cfg, (done, total) => e.sender.send('embed:progress', { done, total }))
+  })
+
+  ipcMain.handle('embed:ask', async (_e, question: string) => {
+    const vault = await currentVault()
+    const cfg = await getConfig()
+    return askNotes(vault, cfg, question)
   })
 
   // ---- import ----
@@ -470,9 +500,15 @@ function register(): void {
         name: string
         reuse?: boolean
         watermark?: boolean
+        includeTags?: boolean
+        includeSummary?: boolean
       }
     ) => {
-      return exportNotes(args.noteIds, args.format, args.name, args.reuse, args.watermark)
+      return exportNotes(args.noteIds, args.format, args.name, args.reuse, {
+        watermark: args.watermark,
+        includeTags: args.includeTags,
+        includeSummary: args.includeSummary
+      })
     }
   )
   ipcMain.handle('export:link', (_e, noteIds: string[], format: ExportFormat) =>

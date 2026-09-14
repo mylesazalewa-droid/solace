@@ -21,7 +21,9 @@ import type {
   TrashItem,
   PassageGroup,
   AttachInfo,
-  AttachState
+  AttachState,
+  IndexStatus,
+  AskAnswer
 } from '../shared/types'
 
 const api = {
@@ -58,6 +60,8 @@ const api = {
     ipcRenderer.invoke('folder:rename', notebookId, folderId, newName),
   setNotebookCover: (notebookId: string, cover: CoverSpec): Promise<VaultSnapshot> =>
     ipcRenderer.invoke('notebook:setCover', notebookId, cover),
+  pickCoverImage: (notebookId: string): Promise<VaultSnapshot | null> =>
+    ipcRenderer.invoke('notebook:pickCoverImage', notebookId),
   reorderNotebooks: (ids: string[]): Promise<VaultSnapshot> =>
     ipcRenderer.invoke('notebook:reorder', ids),
   deleteNote: (noteId: string): Promise<VaultSnapshot> =>
@@ -84,6 +88,15 @@ const api = {
     ipcRenderer.invoke('helper:enrich', noteId),
   summarizeNote: (noteId: string): Promise<VaultSnapshot> =>
     ipcRenderer.invoke('helper:summary', noteId),
+
+  embedStatus: (): Promise<IndexStatus> => ipcRenderer.invoke('embed:status'),
+  embedBuild: (): Promise<IndexStatus> => ipcRenderer.invoke('embed:build'),
+  askNotes: (question: string): Promise<AskAnswer> => ipcRenderer.invoke('embed:ask', question),
+  onEmbedProgress: (cb: (p: { done: number; total: number }) => void): (() => void) => {
+    const listener = (_e: unknown, p: { done: number; total: number }): void => cb(p)
+    ipcRenderer.on('embed:progress', listener)
+    return () => ipcRenderer.removeListener('embed:progress', listener)
+  },
 
   pickImportFiles: (): Promise<string[]> => ipcRenderer.invoke('import:pick'),
   runImport: (args: {
@@ -117,6 +130,8 @@ const api = {
     name: string
     reuse?: boolean
     watermark?: boolean
+    includeTags?: boolean
+    includeSummary?: boolean
   }): Promise<{ path: string; count: number } | null> => ipcRenderer.invoke('export:run', args),
   exportLink: (noteIds: string[], format: ExportFormat): Promise<ExportLink | null> =>
     ipcRenderer.invoke('export:link', noteIds, format),

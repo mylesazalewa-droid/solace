@@ -19,6 +19,7 @@ export type Route =
   | { name: 'trash' }
   | { name: 'passages' }
   | { name: 'published' }
+  | { name: 'ask' }
   | { name: 'notebook'; notebookId: string; folderId: string | null }
   | { name: 'note'; noteId: string; backTo: Route }
   | { name: 'search'; scope: string; query: string }

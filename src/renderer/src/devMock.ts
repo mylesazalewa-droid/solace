@@ -143,6 +143,7 @@ let config: AppConfig = {
   engine: 'local',
   ollamaUrl: 'http://localhost:11434',
   ollamaModel: 'llama3.2',
+  ollamaEmbedModel: 'nomic-embed-text',
   geminiKey: '',
   geminiModel: 'gemini-2.0-flash',
   autoSummary: true,
@@ -151,7 +152,9 @@ let config: AppConfig = {
   firebaseConfig: '',
   syncEnabled: true,
   bibleTranslation: 'kjv',
-  exportWatermark: true
+  exportWatermark: true,
+  exportTags: true,
+  exportSummary: true
 }
 
 let nbOrder: string[] = []
@@ -257,6 +260,11 @@ export function installDevMock(): void {
     },
     setNotebookCover: async (id: string, cover: CoverSpec) => {
       COVERS[id] = cover
+      return snapshot()
+    },
+    pickCoverImage: async (id: string) => {
+      // no real file picker in the browser preview — fake a chosen photo
+      COVERS[id] = { style: 'image', c1: '', c2: '', image: 'demo-cover.jpg' }
       return snapshot()
     },
     reorderNotebooks: async (ids: string[]) => {
@@ -541,6 +549,26 @@ export function installDevMock(): void {
     attachmentWrite: async () => {},
     attachmentStateGet: async () => ({}),
     attachmentStateSet: async () => {},
+    embedStatus: async () => ({ indexed: 5, total: notes.length }),
+    embedBuild: async () => {
+      const onProgress = (window as unknown as { __embedProgressCb?: (p: { done: number; total: number }) => void })
+        .__embedProgressCb
+      onProgress?.({ done: notes.length, total: notes.length })
+      return { indexed: notes.length, total: notes.length }
+    },
+    onEmbedProgress: (cb: (p: { done: number; total: number }) => void) => {
+      ;(window as unknown as { __embedProgressCb?: typeof cb }).__embedProgressCb = cb
+      return () => {}
+    },
+    askNotes: async (question: string) => ({
+      answer: `Based on your notes, here's a dev-mock answer to “${question}”. (In the real app this comes from your configured helper — Ollama or Gemini — reading the notes below.)`,
+      sources: notes.slice(0, 3).map((n) => ({
+        noteId: n.id,
+        title: n.title,
+        notebookId: n.notebookId,
+        score: 0.8
+      }))
+    }),
     scripturePassages: async () => [
       {
         key: '41.006',

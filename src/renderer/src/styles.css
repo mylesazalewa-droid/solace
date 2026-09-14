@@ -1309,6 +1309,13 @@ input {
 .book:active .cover-box {
   transform: translateY(-1px);
 }
+.cover-box.cover-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: var(--raise);
+}
 .cover-box::before {
   content: '';
   position: absolute;
@@ -2801,6 +2808,16 @@ input {
 .cp-preview {
   width: 132px;
   flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cp-upload {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  white-space: normal;
+  line-height: 1.3;
 }
 .cp-controls {
   flex: 1;
@@ -3312,6 +3329,12 @@ input {
   color: var(--danger);
   margin: 0;
 }
+.export-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
 .export-watermark-row {
   display: flex;
   align-items: center;
@@ -3319,7 +3342,6 @@ input {
   font-size: 12.5px;
   color: var(--ink-soft);
   cursor: pointer;
-  margin: 2px 0 0;
 }
 .export-watermark-row input {
   accent-color: var(--grass);
@@ -4169,6 +4191,61 @@ button.pub-badge:hover {
   background: var(--raise);
   padding: 2px 8px;
   border-radius: 999px;
+}
+
+/* ===== ask your notes ===== */
+.ask-body {
+  padding: 8px 32px 34px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  max-width: 720px;
+}
+.ask-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 8px 6px 16px;
+  color: var(--muted);
+}
+.ask-box input {
+  flex: 1;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  color: var(--ink);
+  padding: 6px 0;
+}
+.ask-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--violet-soft);
+  border-radius: var(--r-md);
+  padding: 18px 20px;
+}
+.ask-answer-text {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--ink);
+}
+.ask-answer-text p {
+  margin: 0 0 0.8em;
+}
+.ask-answer-text p:last-child {
+  margin-bottom: 0;
+}
+.ask-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--violet) 18%, transparent);
 }
 
 /* ===== passages view ===== */

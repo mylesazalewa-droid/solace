@@ -79,6 +79,9 @@ export function Shelf(): JSX.Element {
           <button className="hr-item" onClick={() => go({ name: 'published' })}>
             <Icon name="globe" /> <span>Published</span>
           </button>
+          <button className="hr-item" onClick={() => go({ name: 'ask' })}>
+            <Icon name="message" /> <span>Ask</span>
+          </button>
           <button
             className="hr-item"
             onClick={() => go({ name: 'search', scope: 'all', query: '' })}
