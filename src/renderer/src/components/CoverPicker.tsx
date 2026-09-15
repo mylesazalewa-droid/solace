@@ -33,9 +33,11 @@ export function CoverPicker(): JSX.Element | null {
   const snapshot = useStore((s) => s.snapshot)
   const nb = snapshot?.notebooks.find((n) => n.id === notebookId)
   const [spec, setSpec] = useState<CoverSpec | null>(nb?.cover ?? null)
+  const [scope, setScope] = useState<'all' | 'device'>(nb?.deviceCoverOverride ? 'device' : 'all')
 
   useEffect(() => {
     setSpec(nb?.cover ?? null)
+    setScope(nb?.deviceCoverOverride ? 'device' : 'all')
   }, [nb?.id])
 
   useEffect(() => {
@@ -52,16 +54,24 @@ export function CoverPicker(): JSX.Element | null {
 
   const apply = async (next: CoverSpec): Promise<void> => {
     setSpec(next)
-    const snap = await window.solace.setNotebookCover(notebookId, next)
+    const snap = await window.solace.setNotebookCover(notebookId, next, scope)
     useStore.setState({ snapshot: snap })
   }
 
   const uploadPhoto = async (): Promise<void> => {
-    const snap = await window.solace.pickCoverImage(notebookId)
+    const snap = await window.solace.pickCoverImage(notebookId, scope)
     if (!snap) return
     useStore.setState({ snapshot: snap })
     const fresh = snap.notebooks.find((n) => n.id === notebookId)
     if (fresh) setSpec(fresh.cover)
+  }
+
+  const useSyncedCover = async (): Promise<void> => {
+    const snap = await window.solace.clearDeviceCover(notebookId)
+    useStore.setState({ snapshot: snap })
+    const fresh = snap.notebooks.find((n) => n.id === notebookId)
+    if (fresh) setSpec(fresh.cover)
+    setScope('all')
   }
 
   return (
@@ -73,6 +83,26 @@ export function CoverPicker(): JSX.Element | null {
             ✕
           </button>
         </div>
+
+        <div className="cp-scope">
+          <span>Apply to</span>
+          <div className="seg">
+            <button className={scope === 'all' ? 'on' : ''} onClick={() => setScope('all')}>
+              All devices
+            </button>
+            <button className={scope === 'device' ? 'on' : ''} onClick={() => setScope('device')}>
+              This device only
+            </button>
+          </div>
+        </div>
+        {nb.deviceCoverOverride && (
+          <p className="cp-override-note">
+            This device is showing its own cover instead of the synced one.{' '}
+            <button className="linkish" onClick={useSyncedCover}>
+              Use the synced cover instead
+            </button>
+          </p>
+        )}
 
         <div className="cp-body">
           <div className="cp-preview">

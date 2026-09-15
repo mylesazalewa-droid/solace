@@ -22,6 +22,7 @@ import {
   renameNotebook,
   renameFolder,
   setNotebookCover,
+  clearDeviceCover,
   setNotebookOrder,
   deleteNote,
   deleteNotebook,
@@ -252,22 +253,34 @@ function register(): void {
     return scanVault(vault)
   })
 
-  ipcMain.handle('notebook:setCover', async (_e, notebookId: string, cover) => {
-    const vault = await currentVault()
-    await setNotebookCover(vault, notebookId, cover)
-    return scanVault(vault)
-  })
+  ipcMain.handle(
+    'notebook:setCover',
+    async (_e, notebookId: string, cover, scope: 'all' | 'device' = 'all') => {
+      const vault = await currentVault()
+      await setNotebookCover(vault, notebookId, cover, scope)
+      return scanVault(vault)
+    }
+  )
 
-  ipcMain.handle('notebook:pickCoverImage', async (_e, notebookId: string) => {
-    const res = await dialog.showOpenDialog({
-      title: 'Choose a cover photo',
-      properties: ['openFile'],
-      filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }]
-    })
-    if (res.canceled || !res.filePaths[0]) return null
+  ipcMain.handle(
+    'notebook:pickCoverImage',
+    async (_e, notebookId: string, scope: 'all' | 'device' = 'all') => {
+      const res = await dialog.showOpenDialog({
+        title: 'Choose a cover photo',
+        properties: ['openFile'],
+        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }]
+      })
+      if (res.canceled || !res.filePaths[0]) return null
+      const vault = await currentVault()
+      const image = await saveCoverImage(vault, notebookId, res.filePaths[0], scope)
+      await setNotebookCover(vault, notebookId, { style: 'image', c1: '', c2: '', image }, scope)
+      return scanVault(vault)
+    }
+  )
+
+  ipcMain.handle('notebook:clearDeviceCover', async (_e, notebookId: string) => {
     const vault = await currentVault()
-    const image = await saveCoverImage(vault, notebookId, res.filePaths[0])
-    await setNotebookCover(vault, notebookId, { style: 'image', c1: '', c2: '', image })
+    await clearDeviceCover(vault, notebookId)
     return scanVault(vault)
   })
 

@@ -58,10 +58,15 @@ const api = {
     ipcRenderer.invoke('notebook:rename', notebookId, newName),
   renameFolder: (notebookId: string, folderId: string, newName: string): Promise<VaultSnapshot> =>
     ipcRenderer.invoke('folder:rename', notebookId, folderId, newName),
-  setNotebookCover: (notebookId: string, cover: CoverSpec): Promise<VaultSnapshot> =>
-    ipcRenderer.invoke('notebook:setCover', notebookId, cover),
-  pickCoverImage: (notebookId: string): Promise<VaultSnapshot | null> =>
-    ipcRenderer.invoke('notebook:pickCoverImage', notebookId),
+  setNotebookCover: (
+    notebookId: string,
+    cover: CoverSpec,
+    scope?: 'all' | 'device'
+  ): Promise<VaultSnapshot> => ipcRenderer.invoke('notebook:setCover', notebookId, cover, scope),
+  pickCoverImage: (notebookId: string, scope?: 'all' | 'device'): Promise<VaultSnapshot | null> =>
+    ipcRenderer.invoke('notebook:pickCoverImage', notebookId, scope),
+  clearDeviceCover: (notebookId: string): Promise<VaultSnapshot> =>
+    ipcRenderer.invoke('notebook:clearDeviceCover', notebookId),
   reorderNotebooks: (ids: string[]): Promise<VaultSnapshot> =>
     ipcRenderer.invoke('notebook:reorder', ids),
   deleteNote: (noteId: string): Promise<VaultSnapshot> =>

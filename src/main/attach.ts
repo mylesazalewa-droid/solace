@@ -115,22 +115,29 @@ const COVER_IMAGE_EXT = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif'])
 const MAX_COVER_BYTES = 15 * 1024 * 1024
 
 /**
- * Copy a picked photo into `.solace/covers/` for use as a notebook cover.
- * Returns the path relative to the vault root (not a note, so no "../" math).
+ * Copy a picked photo into `.solace/covers/` (synced) or `.solace/covers-local/`
+ * (this device only — never scanned by attachment sync) for use as a notebook
+ * cover. Returns the path relative to the vault root (not a note, so no "../" math).
  */
-export async function saveCoverImage(vault: string, notebookId: string, srcPath: string): Promise<string> {
+export async function saveCoverImage(
+  vault: string,
+  notebookId: string,
+  srcPath: string,
+  scope: 'all' | 'device' = 'all'
+): Promise<string> {
   const ext = extname(srcPath).slice(1).toLowerCase()
   if (!COVER_IMAGE_EXT.has(ext)) throw new Error('Pick a PNG, JPEG, WebP, or GIF image.')
   const stat = await fs.stat(srcPath)
   if (stat.size > MAX_COVER_BYTES) throw new Error('That image is too large (15 MB max).')
 
-  const dir = join(vault, '.solace', 'covers')
+  const folder = scope === 'device' ? 'covers-local' : 'covers'
+  const dir = join(vault, '.solace', folder)
   await fs.mkdir(dir, { recursive: true })
   const base = notebookId.replace(/[^\w.-]+/g, '-').slice(0, 40) || 'cover'
   const stamp = Date.now().toString(36)
   const name = `${base}-${stamp}.${ext}`
   await fs.copyFile(srcPath, join(dir, name))
-  return `.solace/covers/${name}`
+  return `.solace/${folder}/${name}`
 }
 
 /** Absolute filesystem dir a note lives in (for resolving relative image srcs in preview). */

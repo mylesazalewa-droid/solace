@@ -15,6 +15,8 @@ export interface NotebookMeta {
   id: string
   name: string
   cover: CoverSpec
+  /** true when `cover` is a this-device-only override — never synced */
+  deviceCoverOverride?: boolean
   noteCount: number
   /** subfolder names, i.e. series / folders inside the notebook */
   folders: FolderMeta[]

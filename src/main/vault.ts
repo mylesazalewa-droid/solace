@@ -49,6 +49,26 @@ async function writeNotebookCovers(vault: string, covers: Record<string, CoverSp
   await fs.writeFile(join(metaDir(vault), 'notebooks.json'), JSON.stringify(covers, null, 2), 'utf8')
 }
 
+// A device-only cover override — never synced (not part of buildSnapshot/applyRemote), so
+// picking a cover "for this device" can't get clobbered by another device's sync, and picking
+// a cover "for this device" never changes what anyone else sees.
+function deviceCoversFile(vault: string): string {
+  return join(metaDir(vault), 'device-covers.json')
+}
+
+async function readDeviceCovers(vault: string): Promise<Record<string, CoverSpec>> {
+  try {
+    return JSON.parse(await fs.readFile(deviceCoversFile(vault), 'utf8'))
+  } catch {
+    return {}
+  }
+}
+
+async function writeDeviceCovers(vault: string, covers: Record<string, CoverSpec>): Promise<void> {
+  await fs.mkdir(metaDir(vault), { recursive: true })
+  await fs.writeFile(deviceCoversFile(vault), JSON.stringify(covers, null, 2), 'utf8')
+}
+
 async function readNotebookOrder(vault: string): Promise<string[]> {
   try {
     const raw = await fs.readFile(join(metaDir(vault), 'layout.json'), 'utf8')
@@ -176,6 +196,7 @@ async function readNote(
 
 export async function scanVault(vault: string): Promise<VaultSnapshot> {
   const covers = await readNotebookCovers(vault)
+  const deviceCovers = await readDeviceCovers(vault)
   let coversDirty = false
   const notebooks: NotebookMeta[] = []
   const notes: NoteSummary[] = []
@@ -219,7 +240,8 @@ export async function scanVault(vault: string): Promise<VaultSnapshot> {
     notebooks.push({
       id: nbId,
       name: nbName,
-      cover: covers[nbId],
+      cover: deviceCovers[nbId] ?? covers[nbId],
+      deviceCoverOverride: !!deviceCovers[nbId],
       noteCount: nbNoteCount,
       folders
     })
@@ -371,12 +393,18 @@ export async function renameNotebook(
   const to = join(vault, next)
   if (await exists(to)) throw new Error('A notebook with that name already exists')
   await fs.rename(from, to)
-  // carry the cover over
+  // carry the cover(s) over
   const covers = await readNotebookCovers(vault)
   if (covers[notebookId]) {
     covers[next] = covers[notebookId]
     delete covers[notebookId]
     await writeNotebookCovers(vault, covers)
+  }
+  const deviceCovers = await readDeviceCovers(vault)
+  if (deviceCovers[notebookId]) {
+    deviceCovers[next] = deviceCovers[notebookId]
+    delete deviceCovers[notebookId]
+    await writeDeviceCovers(vault, deviceCovers)
   }
   // keep its place on the shelf
   const order = await readNotebookOrder(vault)
@@ -404,11 +432,26 @@ export async function renameFolder(
 export async function setNotebookCover(
   vault: string,
   notebookId: string,
-  cover: CoverSpec
+  cover: CoverSpec,
+  scope: 'all' | 'device' = 'all'
 ): Promise<void> {
+  if (scope === 'device') {
+    const deviceCovers = await readDeviceCovers(vault)
+    deviceCovers[notebookId] = cover
+    await writeDeviceCovers(vault, deviceCovers)
+    return
+  }
   const covers = await readNotebookCovers(vault)
   covers[notebookId] = cover
   await writeNotebookCovers(vault, covers)
+}
+
+/** Drop this device's cover override, going back to whatever the synced cover is. */
+export async function clearDeviceCover(vault: string, notebookId: string): Promise<void> {
+  const deviceCovers = await readDeviceCovers(vault)
+  if (!(notebookId in deviceCovers)) return
+  delete deviceCovers[notebookId]
+  await writeDeviceCovers(vault, deviceCovers)
 }
 
 // ---------- soft delete (move to .trash, never destroy) ----------
@@ -460,6 +503,7 @@ export async function deleteNotebook(vault: string, notebookId: string): Promise
     delete covers[notebookId]
     await writeNotebookCovers(vault, covers)
   }
+  await clearDeviceCover(vault, notebookId)
   return paths
 }
 

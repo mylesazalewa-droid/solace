@@ -24,6 +24,7 @@ interface RawNote {
   daysAgo: number
 }
 
+const DEVICE_COVERS: Record<string, CoverSpec> = {}
 const COVERS: Record<string, CoverSpec> = {
   'Sermon Prep': { style: 'arcs', c1: '#2f7d5b', c2: '#e9f2ec' },
   Journal: { style: 'stripe', c1: '#d99436', c2: '#f6e7cf' },
@@ -177,7 +178,8 @@ function snapshot(): VaultSnapshot {
     return {
       id: name,
       name,
-      cover: COVERS[name] ?? { style: 'grid', c1: '#4c6b86', c2: '#d7e2ea' },
+      cover: DEVICE_COVERS[name] ?? COVERS[name] ?? { style: 'grid', c1: '#4c6b86', c2: '#d7e2ea' },
+      deviceCoverOverride: !!DEVICE_COVERS[name],
       noteCount: own.length,
       folders: [...folderIds].map((fid) => ({
         id: fid,
@@ -258,13 +260,20 @@ export function installDevMock(): void {
       )
       return snapshot()
     },
-    setNotebookCover: async (id: string, cover: CoverSpec) => {
-      COVERS[id] = cover
+    setNotebookCover: async (id: string, cover: CoverSpec, scope: 'all' | 'device' = 'all') => {
+      if (scope === 'device') DEVICE_COVERS[id] = cover
+      else COVERS[id] = cover
       return snapshot()
     },
-    pickCoverImage: async (id: string) => {
+    pickCoverImage: async (id: string, scope: 'all' | 'device' = 'all') => {
       // no real file picker in the browser preview — fake a chosen photo
-      COVERS[id] = { style: 'image', c1: '', c2: '', image: 'demo-cover.jpg' }
+      const cover: CoverSpec = { style: 'image', c1: '', c2: '', image: 'demo-cover.jpg' }
+      if (scope === 'device') DEVICE_COVERS[id] = cover
+      else COVERS[id] = cover
+      return snapshot()
+    },
+    clearDeviceCover: async (id: string) => {
+      delete DEVICE_COVERS[id]
       return snapshot()
     },
     reorderNotebooks: async (ids: string[]) => {
