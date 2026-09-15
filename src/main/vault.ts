@@ -35,7 +35,13 @@ function metaDir(vault: string): string {
   return join(vault, '.solace')
 }
 
-async function readNotebookCovers(vault: string): Promise<Record<string, CoverSpec>> {
+/**
+ * The synced cover map as written to disk — deliberately NOT overlaid with any
+ * device-local override. Sync (buildSnapshot) must read covers through this,
+ * never through scanVault()'s `NotebookMeta.cover`, or a "this device only"
+ * cover would get pushed to the cloud as if it were meant for everyone.
+ */
+export async function readNotebookCovers(vault: string): Promise<Record<string, CoverSpec>> {
   try {
     const raw = await fs.readFile(join(metaDir(vault), 'notebooks.json'), 'utf8')
     return JSON.parse(raw)

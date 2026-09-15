@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs'
 import { join, sep, basename, extname } from 'path'
+import { nativeImage } from 'electron'
 
 const EXT: Record<string, string> = {
   'image/png': 'png',
@@ -113,11 +114,19 @@ export async function saveAttachment(
 
 const COVER_IMAGE_EXT = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif'])
 const MAX_COVER_BYTES = 15 * 1024 * 1024
+// a book-cover thumbnail never needs more than this, and staying well under the
+// attachment sync cap (650KB, itself capped by Firestore's ~1MB document size)
+// means a synced cover photo actually reaches other devices instead of silently
+// being skipped as "oversized"
+const COVER_MAX_EDGE = 640
+const COVER_JPEG_QUALITY = 82
 
 /**
  * Copy a picked photo into `.solace/covers/` (synced) or `.solace/covers-local/`
  * (this device only — never scanned by attachment sync) for use as a notebook
- * cover. Returns the path relative to the vault root (not a note, so no "../" math).
+ * cover. Downscales and re-encodes as JPEG so it reliably fits the sync size
+ * cap regardless of how large the original photo was. Returns the path
+ * relative to the vault root (not a note, so no "../" math).
  */
 export async function saveCoverImage(
   vault: string,
@@ -130,13 +139,40 @@ export async function saveCoverImage(
   const stat = await fs.stat(srcPath)
   if (stat.size > MAX_COVER_BYTES) throw new Error('That image is too large (15 MB max).')
 
+  let img = nativeImage.createFromPath(srcPath)
+  if (img.isEmpty()) throw new Error('Could not read that image — try a different file.')
+  const { width, height } = img.getSize()
+  const longEdge = Math.max(width, height)
+  if (longEdge > COVER_MAX_EDGE) {
+    const scale = COVER_MAX_EDGE / longEdge
+    img = img.resize({
+      width: Math.round(width * scale),
+      height: Math.round(height * scale),
+      quality: 'good'
+    })
+  }
+  // stay comfortably under the attachment-sync cap even for a busy/noisy photo
+  // that compresses poorly — shrink further rather than let it silently fail
+  // to reach other devices
+  const SYNC_SAFE_BYTES = 550 * 1024
+  let buf = img.toJPEG(COVER_JPEG_QUALITY)
+  for (const quality of [60, 45]) {
+    if (buf.length <= SYNC_SAFE_BYTES) break
+    buf = img.toJPEG(quality)
+  }
+  if (buf.length > SYNC_SAFE_BYTES) {
+    const { width: w, height: h } = img.getSize()
+    img = img.resize({ width: Math.round(w * 0.7), height: Math.round(h * 0.7), quality: 'good' })
+    buf = img.toJPEG(60)
+  }
+
   const folder = scope === 'device' ? 'covers-local' : 'covers'
   const dir = join(vault, '.solace', folder)
   await fs.mkdir(dir, { recursive: true })
   const base = notebookId.replace(/[^\w.-]+/g, '-').slice(0, 40) || 'cover'
   const stamp = Date.now().toString(36)
-  const name = `${base}-${stamp}.${ext}`
-  await fs.copyFile(srcPath, join(dir, name))
+  const name = `${base}-${stamp}.jpg`
+  await fs.writeFile(join(dir, name), buf)
   return `.solace/${folder}/${name}`
 }
 

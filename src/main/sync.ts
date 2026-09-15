@@ -8,7 +8,8 @@ import {
   readNoteById,
   writeNoteFile,
   deleteNote,
-  setNotebookCover
+  setNotebookCover,
+  readNotebookCovers
 } from './vault'
 import { listTemplates, saveTemplate } from './templates'
 import type {
@@ -68,8 +69,13 @@ export async function buildSnapshot(vault: string): Promise<SyncSnapshot> {
     notes.push({ ...base, hash: hashNote(base) })
   }
 
+  // read the synced cover map directly — NOT snap.notebooks[].cover, which is
+  // overlaid with any "this device only" cover for display. Pushing that
+  // overlay would leak a device-local cover into the synced state for
+  // everyone the next time any metadata change triggers a meta push.
+  const syncedCovers = await readNotebookCovers(vault)
   const notebooks: Record<string, CoverSpec> = {}
-  for (const nb of snap.notebooks) notebooks[nb.id] = nb.cover
+  for (const nb of snap.notebooks) notebooks[nb.id] = syncedCovers[nb.id] ?? nb.cover
 
   const templates = (await listTemplates()).filter((t) => !t.builtin)
 
