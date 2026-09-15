@@ -62,6 +62,20 @@ export async function runSync(db: Firestore, uid: string, device: string): Promi
   const tombstones: string[] = []
   const clearedTombstones: string[] = []
 
+  // SAFETY INVARIANT — do not weaken this without re-reading the whole loop:
+  // a note is NEVER deleted here just because it's missing from one side. The
+  // only two ways a note gets tombstoned (r.deleted / apply.deletes) are (a)
+  // deletedHere, sourced from this device's own trash + sync-tombstones.json —
+  // i.e. the user actually deleted it on THIS device — or (b) `s` (this path's
+  // prior synced state) already existed and the file is now gone locally,
+  // meaning this device previously had it and lost it (again, a real local
+  // delete, not "the other device doesn't have it yet"). A note the cloud has
+  // never seen, or that simply hasn't arrived here yet, is only ever pulled
+  // (apply.writes) or pushed (pushes) — never removed. forceSync() clears
+  // sync-state (`s`), which makes path (b) impossible too, so a force sync can
+  // only ever add notes back in, never infer a deletion from absence. Even the
+  // one real deletion path (apply.deletes → deleteNote) is a soft delete into
+  // .solace/trash, recoverable from the Trash view.
   for (const path of new Set([...L.keys(), ...R.keys(), ...deletedHere])) {
     const l = L.get(path)
     const r = R.get(path)

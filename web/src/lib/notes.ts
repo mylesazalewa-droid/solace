@@ -31,6 +31,8 @@ export interface Cover {
   style: string
   c1: string
   c2: string
+  /** vault-relative path to a custom cover photo — only set when style is 'image' */
+  image?: string
 }
 
 const DEVICE = 'web'

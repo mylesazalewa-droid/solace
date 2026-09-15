@@ -31,7 +31,7 @@ async function collect(vault: string, dir: string, notebookId: string, out: Atta
   }
 }
 
-/** Every file sitting in a `_attachments/` folder anywhere in the vault. */
+/** Every file sitting in a `_attachments/` folder anywhere in the vault, plus custom cover photos. */
 export async function listAttachments(vault: string): Promise<AttachInfo[]> {
   const out: AttachInfo[] = []
   let notebooks: Dirent[] = []
@@ -56,6 +56,8 @@ export async function listAttachments(vault: string): Promise<AttachInfo[]> {
       }
     }
   }
+  // custom notebook cover photos live outside any notebook folder
+  await collect(vault, join(vault, '.solace', 'covers'), '.covers', out)
   return out
 }
 

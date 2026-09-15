@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react'
+import { useStore } from '../store'
+import { getAttachmentDataUrl } from '../lib/attachments'
 import type { Cover as CoverSpec } from '../lib/notes'
 
 const DEFAULTS: CoverSpec[] = [
@@ -10,6 +13,7 @@ const DEFAULTS: CoverSpec[] = [
 ]
 
 export function coverFor(name: string, given?: CoverSpec): CoverSpec {
+  if (given?.style === 'image' && given.image) return given
   if (given && given.style && given.c1) return given
   let h = 0
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0
@@ -23,6 +27,31 @@ export function Cover({
   cover: CoverSpec
   className?: string
 }): JSX.Element {
+  const uid = useStore((s) => s.user?.uid)
+  const [src, setSrc] = useState<string | null>(null)
+
+  useEffect(() => {
+    let live = true
+    if (cover.style === 'image' && cover.image && uid) {
+      getAttachmentDataUrl(uid, cover.image).then((url) => {
+        if (live) setSrc(url)
+      })
+    } else {
+      setSrc(null)
+    }
+    return () => {
+      live = false
+    }
+  }, [cover.style, cover.image, uid])
+
+  if (cover.style === 'image') {
+    return (
+      <span className={`cover-box cover-image ${className}`}>
+        {src && <img src={src} alt="" draggable={false} />}
+      </span>
+    )
+  }
+
   return (
     <span
       className={`cover-box cover-${cover.style} ${className}`}
