@@ -51,7 +51,7 @@ function cleanBody(md: string): string {
 }
 
 const DOWNLOAD_URL = 'https://github.com/mylesazalewa-droid/solace/releases/latest'
-const WATERMARK_TEXT = 'Made with Solace — a calm notes app by Myles Zalewa.'
+const WATERMARK_TEXT = 'Made with Solace — a notes app created by Myles Zalewa.'
 
 export interface ExportOptions {
   watermark: boolean
